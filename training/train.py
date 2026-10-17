@@ -37,8 +37,10 @@ def set_seed(seed):
 
 
 def _autocast_dtype():
-    # bf16 where supported (A100/L4). DeBERTa-v3 is unstable in fp16, so otherwise use fp32.
-    if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
+    # bf16 only on GPUs with native support (compute capability 8+: A100, L4, H100).
+    # is_bf16_supported() also returns True on a T4, which only emulates bf16 and produced
+    # NaN losses with DeBERTa-v3. DeBERTa is unstable in fp16 too, so everything else uses fp32.
+    if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
         return torch.bfloat16
     return None
 
@@ -94,6 +96,10 @@ def train(cfg: TrainConfig, train_rows, val_rows):
             with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=amp_dtype is not None):
                 pred = model(**batch).logits.float()
             loss = masked_mse(pred, targets, mask) / cfg.grad_accum
+            if not torch.isfinite(loss):
+                raise RuntimeError(
+                    f"Loss became {loss.item()} at epoch {epoch}, step {step}. Training diverged: "
+                    "try a lower learning rate (--lr 1e-5) or a smaller batch size.")
             loss.backward()
             running += loss.item() * cfg.grad_accum
             if step % cfg.grad_accum == 0 or step == len(train_loader):
@@ -117,4 +123,7 @@ def train(cfg: TrainConfig, train_rows, val_rows):
 
     with open(os.path.join(cfg.out_dir, "training_log.json"), "w") as f:
         json.dump({"config": asdict(cfg), "history": history}, f, indent=2)
+    if not os.path.exists(os.path.join(cfg.out_dir, "config.json")):
+        raise RuntimeError(f"No checkpoint was saved to {cfg.out_dir}: validation never produced "
+                           "a valid score. Check the log above for NaN values.")
     return history

@@ -104,6 +104,8 @@ def main():
         train_rows, val_rows = split_by_group(druglib_pairs(df), seed=a.seed)
         print(f"Druglib: {len(df):,} reviews -> {len(train_rows):,} train / {len(val_rows):,} validation pairs")
         is_ckpt = os.path.isdir(a.init)
+        if is_ckpt and not os.path.exists(os.path.join(a.init, "config.json")):
+            sys.exit(f"{a.init} has no saved model. Did stage 1 finish and save a checkpoint?")
         cfg = TrainConfig(model=a.init if is_ckpt else resolve(a.init), out_dir=a.out, epochs=a.epochs,
                           batch_size=a.batch_size, lr=a.lr, max_length=a.max_length,
                           grad_accum=a.grad_accum, seed=a.seed, init_bias=not is_ckpt)

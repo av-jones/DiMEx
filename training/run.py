@@ -55,6 +55,8 @@ def common_args(p):
     p.add_argument("--grad_accum", type=int, default=1)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--precision", choices=["fp32", "bf16"], default="fp32",
+                   help="bf16 is faster on A100/L4 but was unstable with DeBERTa-v3")
 
 
 def main():
@@ -96,7 +98,8 @@ def main():
         else:
             train_rows, val_rows = split_by_group(rows, seed=a.seed)
         cfg = TrainConfig(model=resolve(a.model), out_dir=a.out, epochs=a.epochs, batch_size=a.batch_size,
-                          lr=a.lr, max_length=a.max_length, grad_accum=a.grad_accum, seed=a.seed)
+                          lr=a.lr, max_length=a.max_length, grad_accum=a.grad_accum, seed=a.seed,
+                          precision=a.precision)
         train(cfg, limit(train_rows, a.limit), limit(val_rows, a.limit and max(a.limit // 5, 8)))
 
     elif a.cmd == "stage2":
@@ -108,7 +111,8 @@ def main():
             sys.exit(f"{a.init} has no saved model. Did stage 1 finish and save a checkpoint?")
         cfg = TrainConfig(model=a.init if is_ckpt else resolve(a.init), out_dir=a.out, epochs=a.epochs,
                           batch_size=a.batch_size, lr=a.lr, max_length=a.max_length,
-                          grad_accum=a.grad_accum, seed=a.seed, init_bias=not is_ckpt)
+                          grad_accum=a.grad_accum, seed=a.seed, init_bias=not is_ckpt,
+                          precision=a.precision)
         train(cfg, limit(train_rows, a.limit), limit(val_rows, a.limit and max(a.limit // 5, 8)))
 
     elif a.cmd == "evaluate":

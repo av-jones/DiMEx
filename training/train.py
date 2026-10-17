@@ -29,6 +29,7 @@ class TrainConfig:
     patience: int = 2               # early stopping: epochs without validation improvement
     seed: int = 42
     init_bias: bool = True          # False for stage 2 (the stage-1 head is already calibrated)
+    precision: str = "fp32"         # "fp32" (default, stable) or "bf16" (faster on A100/L4)
 
 
 def set_seed(seed):
@@ -36,11 +37,11 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def _autocast_dtype():
-    # bf16 only on GPUs with native support (compute capability 8+: A100, L4, H100).
-    # is_bf16_supported() also returns True on a T4, which only emulates bf16 and produced
-    # NaN losses with DeBERTa-v3. DeBERTa is unstable in fp16 too, so everything else uses fp32.
-    if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
+def _autocast_dtype(precision):
+    # fp32 by default: DeBERTa-v3 produced NaN gradients under bf16 autocast in our runs, on both
+    # a T4 (emulated bf16) and a native-bf16 GPU. bf16 is opt-in, and only honored on GPUs with
+    # native support (compute capability 8+: A100, L4, H100).
+    if precision == "bf16" and torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
         return torch.bfloat16
     return None
 
@@ -81,11 +82,13 @@ def train(cfg: TrainConfig, train_rows, val_rows):
     optimizer = torch.optim.AdamW(params, lr=cfg.lr)
     steps = math.ceil(len(train_loader) / cfg.grad_accum) * cfg.epochs
     scheduler = get_linear_schedule_with_warmup(optimizer, int(steps * cfg.warmup_ratio), steps)
-    amp_dtype = _autocast_dtype()
+    amp_dtype = _autocast_dtype(cfg.precision)
+    max_skipped, skipped = 20, 0     # updates skipped because gradients were not finite
 
     best, bad_epochs, history = float("inf"), 0, []
     os.makedirs(cfg.out_dir, exist_ok=True)
-    print(f"Training {cfg.model} on {len(train_rows):,} examples ({device}, "
+    gpu = torch.cuda.get_device_name() if device == "cuda" else "cpu"
+    print(f"Training {cfg.model} on {len(train_rows):,} examples ({gpu}, "
           f"{'bf16' if amp_dtype else 'fp32'}), validating on {len(val_rows):,}")
 
     for epoch in range(1, cfg.epochs + 1):
@@ -103,7 +106,16 @@ def train(cfg: TrainConfig, train_rows, val_rows):
             loss.backward()
             running += loss.item() * cfg.grad_accum
             if step % cfg.grad_accum == 0 or step == len(train_loader):
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                if not torch.isfinite(grad_norm):
+                    # An invalid gradient would turn every weight into NaN through AdamW's
+                    # moment estimates. Skip this update instead, and stop if it keeps happening.
+                    optimizer.zero_grad(); skipped += 1
+                    print(f"  skipped update at epoch {epoch}, step {step}: gradient norm {grad_norm.item()}")
+                    if skipped > max_skipped:
+                        raise RuntimeError(f"{skipped} updates had invalid gradients. Try --lr 1e-5, "
+                                           "or check the data for empty or extremely long texts.")
+                    continue
                 optimizer.step(); scheduler.step(); optimizer.zero_grad()
 
         val = evaluate_loss(model, val_loader, device)

@@ -54,9 +54,12 @@ def chip(label):
 
 
 # Map a valence score back onto Druglib's patient rating scales (model check page).
+# Uses the same anchor table as training (core/va_anchors.py), so scores round-trip.
 def va_to_rating(v, kind):
+    from core.va_anchors import (valence_to_effectiveness, valence_to_satisfaction,
+                                 valence_to_side_effects)
     if kind == "effectiveness":          # 1 = ineffective ... 5 = highly effective
-        return 1 + (v - 1) / 8 * 4
+        return valence_to_effectiveness(v)
     if kind == "side_effect":            # 1 = none ... 5 = extremely severe
-        return 1 + (9 - v) / 8 * 4
-    return 1 + (v - 1) / 8 * 9           # satisfaction 1-10
+        return valence_to_side_effects(v)
+    return valence_to_satisfaction(v)    # satisfaction 1-10

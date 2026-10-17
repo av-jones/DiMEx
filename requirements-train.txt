@@ -1,0 +1,10 @@
+# Training dependencies (Colab already has most of these)
+torch
+transformers>=4.48
+sentencepiece
+tiktoken
+protobuf
+scikit-learn
+pandas
+numpy
+huggingface_hub

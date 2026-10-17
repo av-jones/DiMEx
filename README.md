@@ -32,6 +32,33 @@ scripts/batch_score.py  scores all Drugs.com reviews with all models -> data/pre
 .streamlit/config.toml  colors matching the design prototype
 ```
 
+## Model pipeline (`training/`)
+
+Run in Colab with `DiMEx_training.ipynb`, or from the repo root:
+
+```bash
+pip install -r requirements-train.txt
+python -m training.run stage1 --model DeBERTa-v3 --dimabsa <DimABSA eng train .jsonl files> --out ckpts/deberta/stage1
+python -m training.run stage2 --init ckpts/deberta/stage1 --druglib data/druglib --out ckpts/deberta/stage2
+python -m training.run evaluate --ckpt ckpts/deberta/stage2 --druglib data/druglib \
+    --drugscom data/drugscom/drugsComTest_raw.tsv --handlabels data/drugscom_handlabels.csv --out results/deberta.csv
+python -m training.run push --ckpt ckpts/deberta/stage2 --repo your-team/dimex-deberta
+```
+
+| File | What it does |
+|---|---|
+| `training/data.py` | Loads DimABSA JSONL and Druglib TSVs into (text, aspect) pairs with valence-arousal targets; splits validation by review |
+| `training/model.py` | Encoder + 2-output regression head (`AutoModelForSequenceClassification`, `num_labels=2`), masked MSE loss |
+| `training/train.py` | Plain PyTorch loop: AdamW, warmup, bf16 where supported, gradient clipping, early stopping on validation RMSE |
+| `training/evaluate.py` | MAE and RMSE on the rating scales, plus 3-class accuracy and kappa matching Gräßer et al. (2018) |
+| `training/run.py` | Command line for stage 1, stage 2, evaluate, push |
+| `core/va_anchors.py` | The Druglib-rating ↔ valence-arousal table, shared by training and the app |
+
+Design notes:
+- Druglib gives valence-like labels for all three aspects but arousal only for side-effect severity (via the anchor table). Missing targets are masked out of the loss, so arousal is learned from DimABSA, not invented.
+- Each Druglib text field is scored with its own aspect (benefits → Effectiveness, side effects → Side-effect severity, comments → Satisfaction), as in the original viewer design.
+- The anchor values in `core/va_anchors.py` are a first draft. Calibrate them and report the final table in the paper.
+
 ## Going from demo data to real results
 
 1. **Train in Colab.** Fine-tune each encoder with a 2-output regression head (valence, arousal), input as a sentence pair `(review text, aspect)`, MSE loss. Stage 1 on DimABSA English data, stage 2 on Druglib with ordinal labels mapped to VA targets.

@@ -1,0 +1,7 @@
+streamlit>=1.46
+pandas>=2.0
+pyarrow>=14
+# Needed once real checkpoints are set in core/registry.py:
+# torch
+# transformers>=4.48
+# sentencepiece

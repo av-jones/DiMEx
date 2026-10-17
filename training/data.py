@@ -25,30 +25,51 @@ def _parse_va(va):
     return float(v), float(a)
 
 
+def _aspect_text(item):
+    """The aspect term, or for implicit aspects (Aspect "NULL") the category in words:
+    "RESTAURANT#GENERAL" -> "restaurant general". Those sentence-level judgments resemble
+    our drug aspects ("Effectiveness", "Satisfaction"), so they are kept, not dropped."""
+    aspect = item.get("Aspect")
+    if aspect and aspect != "NULL":
+        return aspect
+    category = item.get("Category")
+    if category and category != "NULL":
+        return category.replace("#", " ").replace("_", " ").lower()
+    return None
+
+
 def _dimabsa_rows(record):
     """One JSONL record -> pair examples. Handles subtask 1 (Aspect_VA) and the
-    triplet/quadruplet files of subtasks 2-3, which also carry VA per aspect."""
+    triplet/quadruplet ("alltasks") files, which carry VA per aspect."""
     text, rid = record["Text"], str(record.get("ID", ""))
     items = (record.get("Aspect_VA") or record.get("Quadruplet") or record.get("Triplet") or [])
     rows = []
     for it in items:
-        if "VA" not in it or not it.get("Aspect") or it["Aspect"] == "NULL":
+        aspect = _aspect_text(it)
+        if "VA" not in it or not aspect:          # e.g. categorical files have Polarity, not VA
             continue
         v, a = _parse_va(it["VA"])
-        rows.append({"text": text, "aspect": it["Aspect"], "v": v, "a": a, "group": rid})
+        rows.append({"text": text, "aspect": aspect, "v": v, "a": a, "group": rid})
     return rows
 
 
 def load_dimabsa(paths):
-    """paths: list of JSONL files (or one folder; every *.jsonl with VA labels in it is used)."""
+    """paths: list of JSONL files (or one folder; every *.jsonl with VA labels in it is used).
+    Exact duplicates (same sentence, aspect and scores) are removed, so passing the same file
+    twice, as the task repo's identical subtask folders invite, doesn't double-count data."""
     if isinstance(paths, str) and os.path.isdir(paths):
         paths = sorted(glob.glob(os.path.join(paths, "**", "*.jsonl"), recursive=True))
-    rows = []
+    rows, seen = [], set()
     for p in paths:
         with open(p, encoding="utf-8") as f:
             for line in f:
-                if line.strip():
-                    rows.extend(_dimabsa_rows(json.loads(line)))
+                if not line.strip():
+                    continue
+                for r in _dimabsa_rows(json.loads(line)):
+                    key = (r["group"], r["text"], r["aspect"], r["v"], r["a"])
+                    if key not in seen:
+                        seen.add(key)
+                        rows.append(r)
     print(f"DimABSA: {len(rows):,} aspect examples from {len(paths)} file(s)")
     return rows
 

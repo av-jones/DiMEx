@@ -38,20 +38,24 @@ Run in Colab with `DiMEx_training.ipynb`, or from the repo root:
 
 ```bash
 pip install -r requirements-train.txt
-python -m training.run stage1 --model DeBERTa-v3 --dimabsa <DimABSA eng train .jsonl files> --out ckpts/deberta/stage1
-python -m training.run stage2 --init ckpts/deberta/stage1 --druglib data/druglib --out ckpts/deberta/stage2
-python -m training.run evaluate --ckpt ckpts/deberta/stage2 --druglib data/druglib \
-    --drugscom data/drugscom/drugsComTest_raw.tsv --handlabels data/drugscom_handlabels.csv --out results/deberta.csv
-python -m training.run push --ckpt ckpts/deberta/stage2 --repo your-team/dimex-deberta
+python -m training.run stage1 --model RoBERTa --dimabsa <DimABSA eng train .jsonl files> --out ckpts/roberta/stage1
+python -m training.run stage2 --init ckpts/roberta/stage1 --druglib data/druglib --out ckpts/roberta/stage2
+python -m training.run evaluate --ckpt ckpts/roberta/stage2 --druglib data/druglib \
+    --drugscom data/drugscom/drugsComTest_raw.tsv --handlabels data/drugscom_handlabels.csv \
+    --out results/roberta_seed42.csv --preds results/preds/roberta_seed42.csv
+# without the SemEval step (ablation): start stage 2 from the plain model
+python -m training.run stage2 --init RoBERTa --druglib data/druglib --out ckpts/roberta_nostage1/stage2
+python -m training.run push --ckpt ckpts/roberta/stage2 --repo your-team/dimex-roberta   # private by default
 ```
 
 | File | What it does |
 |---|---|
 | `training/data.py` | Loads DimABSA JSONL and Druglib TSVs into (text, aspect) pairs with valence-arousal targets; splits validation by review |
 | `training/model.py` | Encoder + 2-output regression head (`AutoModelForSequenceClassification`, `num_labels=2`), masked MSE loss |
-| `training/train.py` | Plain PyTorch loop: AdamW, warmup, bf16 where supported, gradient clipping, early stopping on validation RMSE |
+| `training/train.py` | Plain PyTorch loop: AdamW, warmup, fp32 (bf16 optional), gradient clipping, early stopping on validation RMSE |
 | `training/evaluate.py` | MAE and RMSE on the rating scales, plus 3-class accuracy and kappa matching Gräßer et al. (2018) |
 | `training/run.py` | Command line for stage 1, stage 2, evaluate, push |
+| `training/charts.py` | Notebook charts: training curves, results vs. Gräßer et al., SemEval-step ablation, confusion matrices |
 | `core/va_anchors.py` | The Druglib-rating ↔ valence-arousal table, shared by training and the app |
 
 Design notes:

@@ -1,20 +1,23 @@
 """Command line for the whole model pipeline. Run from the repo root.
 
   Stage 1: learn the valence-arousal scale on DimABSA (English restaurant + laptop)
-    python -m training.run stage1 --model DeBERTa-v3 --dimabsa data/dimabsa --out ckpts/deberta/stage1
+    python -m training.run stage1 --model RoBERTa --dimabsa data/dimabsa --out ckpts/roberta/stage1
 
   Stage 2: adapt to drug reviews on Druglib (validation slice cut from the train file only)
-    python -m training.run stage2 --init ckpts/deberta/stage1 --druglib data/druglib --out ckpts/deberta/stage2
+    python -m training.run stage2 --init ckpts/roberta/stage1 --druglib data/druglib --out ckpts/roberta/stage2
 
   Evaluate: Druglib test split, plus Drugs.com if given
-    python -m training.run evaluate --ckpt ckpts/deberta/stage2 --druglib data/druglib \
+    python -m training.run evaluate --ckpt ckpts/roberta/stage2 --druglib data/druglib \
         --drugscom data/drugscom/drugsComTest_raw.tsv --handlabels data/drugscom_handlabels.csv \
-        --out results/deberta.csv
+        --out results/roberta.csv --preds results/preds/roberta.csv
 
   Push a checkpoint to the Hugging Face Hub (then set it as "ckpt" in core/registry.py)
-    python -m training.run push --ckpt ckpts/deberta/stage2 --repo your-team/dimex-deberta
+    python -m training.run push --ckpt ckpts/roberta/stage2 --repo your-team/dimex-roberta
 
---model accepts a name from core/registry.py (e.g. "PubMedBERT") or any Hugging Face model id.
+Without the SemEval step (ablation): pass a model name to --init instead of a checkpoint
+    python -m training.run stage2 --init RoBERTa --druglib data/druglib --out ckpts/roberta_nostage1/stage2
+
+--model accepts a name from core/registry.py (e.g. "BioBERT") or any Hugging Face model id.
 --limit N uses only N training examples: a quick smoke test before a full run.
 """
 import argparse
@@ -82,6 +85,7 @@ def main():
     ev.add_argument("--handlabels", help="CSV: text, effectiveness (1-5), side_effects (1-5)")
     ev.add_argument("--max_length", type=int, default=256)
     ev.add_argument("--out", required=True, help="results CSV")
+    ev.add_argument("--preds", help="optional CSV of per-review predictions (for confusion matrices)")
 
     pu = sub.add_parser("push", help="upload a checkpoint to the Hugging Face Hub")
     pu.add_argument("--ckpt", required=True)
@@ -121,9 +125,10 @@ def main():
         from training.model import load_model
         model, tok = load_model(a.ckpt)
         model.to("cuda" if torch.cuda.is_available() else "cpu")
-        tables = []
+        tables, preds = [], []
         if a.druglib:
-            tables.append(evaluate_druglib(model, tok, load_druglib_split(find(a.druglib, "test")), a.max_length))
+            t, p = evaluate_druglib(model, tok, load_druglib_split(find(a.druglib, "test")), a.max_length)
+            tables.append(t); preds.append(p)
         dc = hl = None
         if a.drugscom:
             dc = pd.read_csv(a.drugscom, sep="\t").rename(columns={"review": "text"})
@@ -132,10 +137,14 @@ def main():
         if a.handlabels:
             hl = pd.read_csv(a.handlabels)
         if dc is not None or hl is not None:
-            tables.append(evaluate_drugscom(model, tok, dc, hl, a.max_length))
+            t, p = evaluate_drugscom(model, tok, dc, hl, a.max_length)
+            tables.append(t); preds.append(p)
         results = pd.concat(tables, ignore_index=True).assign(checkpoint=a.ckpt)
         os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
         results.to_csv(a.out, index=False)
+        if a.preds:
+            os.makedirs(os.path.dirname(a.preds) or ".", exist_ok=True)
+            pd.concat(preds, ignore_index=True).assign(checkpoint=a.ckpt).to_csv(a.preds, index=False)
         print(results.to_string(index=False))
 
     elif a.cmd == "push":

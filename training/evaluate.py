@@ -43,28 +43,40 @@ def _predict_scale(model, tok, texts, aspect, max_length):
     return [TO_SCALE[aspect](v) for v, _ in va]
 
 
+def _preds(dataset, aspect, pred, gold):
+    """Per-review predictions on the rating scale, for confusion matrices."""
+    return pd.DataFrame({"dataset": dataset, "aspect": aspect,
+                         "gold": np.asarray(gold, float), "pred": np.asarray(pred, float)})
+
+
 def evaluate_druglib(model, tok, test_df, max_length=256):
-    """Score each text field with its aspect, as in the original viewer design."""
-    blocks = []
+    """Score each text field with its aspect, as in the original viewer design.
+    Returns (metrics table, per-review predictions)."""
+    blocks, preds = [], []
     for field, aspect, gold_col in [("benefitsReview", ASPECT_EFFECT, "eff_level"),
                                     ("sideEffectsReview", ASPECT_SIDE, "side_level"),
                                     ("commentsReview", ASPECT_SAT, "rating")]:
         df = test_df[(test_df[field] != "") & test_df[gold_col].notna()]
         pred = _predict_scale(model, tok, df[field], aspect, max_length)
         blocks.append(score_block(aspect, pred, df[gold_col]))
-    return pd.DataFrame(blocks).assign(dataset="Druglib test")
+        preds.append(_preds("Druglib test", aspect, pred, df[gold_col]))
+    return pd.DataFrame(blocks).assign(dataset="Druglib test"), pd.concat(preds, ignore_index=True)
 
 
 def evaluate_drugscom(model, tok, drugscom_df=None, handlabels_df=None, max_length=256):
     """drugscom_df: columns text, rating (1-10). handlabels_df: columns text, effectiveness (1-5),
-    side_effects (1-5); either may be None. Whole review text is scored for every aspect."""
-    blocks = []
+    side_effects (1-5); either may be None. Whole review text is scored for every aspect.
+    Returns (metrics table, per-review predictions)."""
+    blocks, preds = [], []
     if drugscom_df is not None and len(drugscom_df):
         pred = _predict_scale(model, tok, drugscom_df["text"], ASPECT_SAT, max_length)
         blocks.append(score_block(ASPECT_SAT, pred, drugscom_df["rating"]))
+        preds.append(_preds("Drugs.com", ASPECT_SAT, pred, drugscom_df["rating"]))
     if handlabels_df is not None and len(handlabels_df):
         for aspect, col in [(ASPECT_EFFECT, "effectiveness"), (ASPECT_SIDE, "side_effects")]:
             df = handlabels_df[handlabels_df[col].notna()]
             pred = _predict_scale(model, tok, df["text"], aspect, max_length)
             blocks.append(score_block(aspect, pred, df[col]))
-    return pd.DataFrame(blocks).assign(dataset="Drugs.com")
+            preds.append(_preds("Drugs.com", aspect, pred, df[col]))
+    return (pd.DataFrame(blocks).assign(dataset="Drugs.com"),
+            pd.concat(preds, ignore_index=True) if preds else pd.DataFrame())

@@ -1,11 +1,12 @@
 import pandas as pd
 import streamlit as st
 
+from core.data import mentions
 from core.labels import chip
 from core.registry import MODEL_NAMES
 from core.ui import fake_data_banner, highlight, load_predictions
 
-preds = load_predictions()
+preds = mentions(load_predictions())   # keyword-found aspects; whole-review scores are on other pages
 fake_data_banner()
 
 # Default: a high-rated review with a severe side effect, the most interesting case.

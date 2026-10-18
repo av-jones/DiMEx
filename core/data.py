@@ -11,9 +11,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from core.labels import typical_severity, va_to_rating
+from core.explain import intensity_band
+from core.labels import rating_label, typical_severity, va_to_rating
 from core.registry import MODEL_NAMES, Predictor
 
+SIDE_EFFECT_PRESENT = 1.6   # whole-review side-effect score (1-5) at which side effects count as reported
 PRED_PATH = Path(__file__).resolve().parent.parent / "data" / "predictions.parquet"
 
 # ---------------- Drugs.com side (main pages) ----------------
@@ -49,14 +51,21 @@ def fake_reviews(per_group=40, seed=7):
 
 
 def batch_score(reviews, model_names=MODEL_NAMES):
-    """Score every review with every model. One row per (review, model, aspect)."""
+    """Score every review with every model. Two kinds of rows per (review, model):
+    scope "review": the three trained aspects scored on the whole review (score = Druglib scale);
+    scope "mention": side effects found by keyword, each scored on its own (experimental)."""
     rows = []
     for name in model_names:
         predictor = Predictor(name)
         for r in reviews.itertuples():
+            base = {"review_id": r.review_id, "drug": r.drug, "condition": r.condition,
+                    "rating": r.rating, "text": r.text, "model": name}
+            for item in predictor.score_review(r.text):
+                rows.append({**base, "scope": "review", "aspect": item["aspect"], "kind": item["kind"],
+                             "span": None, "valence": item["valence"], "arousal": item["arousal"],
+                             "label": item["label"], "score": item["rating"], "scale": item["scale"]})
             for item in predictor.predict(r.text):
-                rows.append({"review_id": r.review_id, "drug": r.drug, "condition": r.condition,
-                             "rating": r.rating, "text": r.text, "model": name, **item})
+                rows.append({**base, "scope": "mention", **item})
     return pd.DataFrame(rows)
 
 
@@ -66,32 +75,62 @@ def load_predictions():
     return batch_score(fake_reviews())
 
 
+def _bands(arousal):
+    bands = pd.Series([intensity_band(a, "side_effect") for a in arousal], dtype=object)
+    shares = bands.value_counts(normalize=True)
+    return {b: float(shares.get(b, 0.0)) for b in ("Mild", "Moderate", "Distressing")}
+
+
+def mentions(df):
+    """Rows for keyword-found side effects (older prediction files have no scope column)."""
+    return df[df.scope == "mention"] if "scope" in df else df
+
+
 def summarize(df, drug, condition, model):
+    """Everything the drug page shows for one drug, condition and model."""
     sub = df[(df.drug == drug) & (df.condition == condition) & (df.model == model)]
     n = sub.review_id.nunique()
     if n == 0:
         return None
-    eff = sub[sub.kind == "effectiveness"].label.value_counts(normalize=True)
-    side = sub[sub.kind == "side_effect"]
-    effects = [{"name": name, "share": g.review_id.nunique() / n,
-                "severity": typical_severity(g.label)}
-               for name, g in side.groupby("aspect")]
+    whole = sub[sub.scope == "review"] if "scope" in sub else sub.iloc[0:0]
+    ment = mentions(sub)
+    side_m = ment[ment.kind == "side_effect"]
+
+    tiles = {}
+    for kind in ("effectiveness", "side_effect", "satisfaction"):
+        g = whole[whole.kind == kind]
+        if len(g):
+            mean = float(g.score.mean())
+            tiles[kind] = {"mean": mean, "scale": int(g.scale.iloc[0]), "label": rating_label(kind, mean)}
+
+    # Side-effect intensity: reviews whose whole-review side-effect score shows any side effects
+    side_w = whole[(whole.kind == "side_effect") & (whole.score >= SIDE_EFFECT_PRESENT)]
+    intensity = _bands(side_w.arousal) if len(side_w) else None
+    dots = pd.DataFrame({"v": side_w.valence, "a": side_w.arousal,
+                         "band": [intensity_band(a, "side_effect") for a in side_w.arousal]})
+
+    effects = []
+    for name, g in side_m.groupby("aspect"):
+        effects.append({"name": name, "share": g.review_id.nunique() / n, "bands": _bands(g.arousal),
+                        "severity": typical_severity(g.label)})
     effects.sort(key=lambda e: e["share"], reverse=True)
 
-    severe_ids = set(side[side.label == "Severe"].review_id)
     ratings = sub.drop_duplicates("review_id").set_index("review_id").rating
-    mismatch = int(sum(1 for rid in severe_ids if ratings[rid] >= 9))
+    distressing = set(side_w[[intensity_band(a, "side_effect") == "Distressing" for a in side_w.arousal]].review_id)
+    if not len(whole):        # older files: fall back to keyword-found severe side effects
+        distressing = set(side_m[side_m.label == "Severe"].review_id)
+    mismatch = sorted(rid for rid in distressing if ratings[rid] >= 9)
 
     quotes, used = [], set()
-    for _, row in side.sort_values("label", key=lambda s: s.map({"Severe": 0, "Moderate": 1, "Mild": 2})).iterrows():
+    order = {"Severe": 0, "Moderate": 1, "Mild": 2}
+    for _, row in side_m.sort_values("label", key=lambda s: s.map(order)).iterrows():
         if row.aspect not in used:
             quotes.append(row)
             used.add(row.aspect)
         if len(quotes) == 3:
             break
-    return {"n": n, "worked": eff.get("Worked well", 0.0), "some": eff.get("Some benefit", 0.0),
-            "none": eff.get("Didn't help", 0.0), "effects": effects, "mismatch": mismatch,
-            "quotes": quotes}
+    return {"n": n, "tiles": tiles, "intensity": intensity, "dots": dots, "effects": effects,
+            "mismatch": mismatch, "quotes": quotes, "avg_stars": float(ratings.mean())}
 
 
 # ---------------- Druglib side (model check page) ----------------

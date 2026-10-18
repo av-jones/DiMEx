@@ -4,12 +4,25 @@ We use AutoModelForSequenceClassification(num_labels=2) instead of a custom
 nn.Module so a saved checkpoint loads directly in the app (core/registry.py,
 AspectScorer) and pushes to the Hugging Face Hub with no extra code.
 """
+import os
+
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
+def _tokenizer_kwargs(name_or_path):
+    """Cased models whose Hub repo has no tokenizer settings (BioBERT: dmis-lab/biobert-base-cased-v1.2)
+    would otherwise be lowercased by default, which doesn't match their cased vocabulary.
+    Saved checkpoints record the setting, so this only matters when starting from the Hub."""
+    name = name_or_path.lower()
+    local_cfg = os.path.exists(os.path.join(name_or_path, "tokenizer_config.json"))
+    if "cased" in name and "uncased" not in name and not local_cfg:
+        return {"do_lower_case": False}
+    return {}
+
+
 def load_model(name_or_path, num_labels=2):
-    tokenizer = AutoTokenizer.from_pretrained(name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained(name_or_path, **_tokenizer_kwargs(name_or_path))
     model = AutoModelForSequenceClassification.from_pretrained(
         name_or_path, num_labels=num_labels, problem_type="regression",
         ignore_mismatched_sizes=True)          # lets a stage-1 checkpoint or a fresh encoder load

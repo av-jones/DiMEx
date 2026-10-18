@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from transformers import get_linear_schedule_with_warmup
 
 from training.data import PairDataset, make_collate
-from training.model import init_head_bias, load_model, masked_mse
+from training.model import init_head_bias, load_model, masked_mse, model_inputs
 
 
 @dataclass
@@ -53,7 +53,7 @@ def evaluate_loss(model, loader, device):
     with torch.no_grad():
         for batch in loader:
             targets, mask = batch.pop("targets"), batch.pop("mask")
-            pred = model(**{k: v.to(device) for k, v in batch.items()}).logits.float().cpu().clamp(1, 9)
+            pred = model(**model_inputs(model, {k: v.to(device) for k, v in batch.items()})).logits.float().cpu().clamp(1, 9)
             se += ((pred - targets) ** 2 * mask).sum(0); n += mask.sum(0)
     rmse = (se / n.clamp(min=1)).sqrt()
     return {"rmse_v": rmse[0].item(), "rmse_a": rmse[1].item() if n[1] > 0 else float("nan"),
@@ -97,7 +97,7 @@ def train(cfg: TrainConfig, train_rows, val_rows):
             targets, mask = batch.pop("targets").to(device), batch.pop("mask").to(device)
             batch = {k: v.to(device) for k, v in batch.items()}
             with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=amp_dtype is not None):
-                pred = model(**batch).logits.float()
+                pred = model(**model_inputs(model, batch)).logits.float()
             loss = masked_mse(pred, targets, mask) / cfg.grad_accum
             if not torch.isfinite(loss):
                 raise RuntimeError(

@@ -20,6 +20,8 @@ MODELS = {
                      "domain": "PubMed abstracts"},
     "BioBERT":      {"hf_id": "dmis-lab/biobert-base-cased-v1.2", "ckpt": None,
                      "domain": "PubMed and PMC articles"},
+    "BioRedditBERT": {"hf_id": "cambridgeltl/BioRedditBERT-uncased", "ckpt": None,
+                      "domain": "BioBERT plus health discussions on Reddit"},
     "ClinicalBERT": {"hf_id": "emilyalsentzer/Bio_ClinicalBERT", "ckpt": None,
                      "domain": "Clinical notes (MIMIC-III)"},
 }
@@ -47,12 +49,14 @@ class AspectScorer:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tok = AutoTokenizer.from_pretrained(ckpt)
         self.model = AutoModelForSequenceClassification.from_pretrained(ckpt).to(self.device).eval()
+        import inspect
+        self.inputs = set(inspect.signature(self.model.forward).parameters)   # ModernBERT: no token_type_ids
 
     def score(self, text, aspects):
         enc = self.tok([text] * len(aspects), aspects, truncation=True, max_length=512,
                        padding=True, return_tensors="pt").to(self.device)
         with self.torch.no_grad():
-            out = self.model(**enc).logits.clamp(1, 9).cpu().tolist()
+            out = self.model(**{k: v for k, v in enc.items() if k in self.inputs}).logits.clamp(1, 9).cpu().tolist()
         return [(round(v, 1), round(a, 1)) for v, a in out]
 
 

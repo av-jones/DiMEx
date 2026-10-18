@@ -36,10 +36,12 @@ GROUPS = [("Druglib test", ASPECT_EFFECT, "Effectiveness"),
 
 GRASSER_COLOR = "#b4b2a9"
 COLORS = {("RoBERTa", True): "#2a78d6", ("RoBERTa", False): "#9ec5f0",
-          ("BioBERT", True): "#1d9e75", ("BioBERT", False): "#97d8bd"}
+          ("BioBERT", True): "#1d9e75", ("BioBERT", False): "#97d8bd",
+          ("ModernBERT", True): "#7f77dd", ("ModernBERT", False): "#c3bff0",
+          ("BioRedditBERT", True): "#d4537e", ("BioRedditBERT", False): "#efb3c8"}
 METRIC_NAMES = {"kappa_3class": "Cohen's kappa × 100", "acc_3class": "Accuracy (%)"}
 METRIC_SHORT = {"kappa_3class": "Cohen's kappa", "acc_3class": "accuracy"}
-PLANNED = ["RoBERTa", "BioBERT"]   # the comparison's two models: general and biomedical
+PLANNED = ["RoBERTa", "ModernBERT", "BioBERT", "BioRedditBERT"]   # general x2, biomedical, biomedical + patient language
 
 
 def slug(name):
@@ -66,7 +68,7 @@ def _color(model, semeval, i):
 
 
 def _order(model, semeval):
-    names = list(MODELS)
+    names = PLANNED + [m for m in MODELS if m not in PLANNED]
     return (names.index(model) if model in names else 99, not semeval)
 
 
@@ -156,7 +158,7 @@ def plot_training_curves(work):
 def show_transfer_grid(res, metric="kappa_3class"):
     """The headline: Druglib -> Drugs.com satisfaction, model x SemEval step."""
     dc = res[(res.dataset == "Drugs.com") & (res.aspect == ASPECT_SAT)]
-    models = [m for m in MODELS if m in set(res.model) | set(PLANNED)]
+    models = PLANNED + sorted(set(res.model) - set(PLANNED), key=lambda m: _order(m, True))
     grid = pd.DataFrame(index=models, columns=["With SemEval step", "Without"], dtype=float)
     for r in dc.itertuples():
         grid.loc[r.model, "With SemEval step" if r.semeval else "Without"] = getattr(r, metric) * 100
@@ -172,27 +174,29 @@ def plot_comparison(res, metric="kappa_3class"):
     series = [("Gräßer et al. (2018)", GRASSER, GRASSER_COLOR)]
     series += [(run_label(m, s), res[(res.model == m) & (res.semeval == s)], _color(m, s, i))
                for i, (m, s) in enumerate(runs)]
-    x = np.arange(len(GROUPS)); width = 0.8 / len(series)
-    fig, ax = plt.subplots(figsize=(10, 4.2))
+    x = np.arange(len(GROUPS)); width = 0.84 / len(series)
+    fig, ax = plt.subplots(figsize=(max(10, 1.4 * len(series) + 2), 4.6))
     for i, (label, df, color) in enumerate(series):
         vals = []
         for ds, asp, _ in GROUPS:
             hit = df[(df.dataset == ds) & (df.aspect == asp)]
             vals.append(hit[metric].iloc[0] * 100 if len(hit) else np.nan)
         bars = ax.bar(x - 0.4 + width * (i + 0.5), vals, width * 0.92, label=label, color=color)
-        ax.bar_label(bars, fmt="%.1f", fontsize=7, padding=2)
+        ax.bar_label(bars, fmt="%.1f", fontsize=7 if len(series) <= 5 else 6, padding=2)
     ax.set_xticks(x, [g[2] for g in GROUPS]); ax.set_ylabel(METRIC_NAMES[metric])
     ax.set_ylim(0, 100 if metric == "acc_3class" else 75)
-    ax.legend(frameon=False, fontsize=8, ncol=min(len(series), 5), loc="upper center",
-              bbox_to_anchor=(0.5, 1.13))
     ax.grid(axis="y", alpha=0.3); ax.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout(); plt.show()
+    rows = 1 if len(series) <= 5 else 2
+    fig.legend(*ax.get_legend_handles_labels(), frameon=False, fontsize=8, loc="upper center",
+               ncol=math.ceil(len(series) / rows))
+    fig.tight_layout(rect=(0, 0, 1, 0.93 if rows == 1 else 0.88)); plt.show()
 
 
 def plot_ablation(res, metric="kappa_3class"):
     """What the SemEval step adds: (with) minus (without), per model and aspect.
     Bars above zero mean learning valence-arousal on SemEval first helped."""
-    both = [m for m in MODELS if {True, False} <= set(res[res.model == m].semeval)]
+    both = [m for m in sorted(set(res.model), key=lambda m: _order(m, True))
+            if {True, False} <= set(res[res.model == m].semeval)]
     if not both:
         print("Ablation needs a model trained both with and without the SemEval step "
               "(sections 4 and 6)."); return
@@ -210,11 +214,12 @@ def plot_ablation(res, metric="kappa_3class"):
     ax.axhline(0, color="#5f5e5a", lw=1)
     ax.set_xticks(x, [g[2] for g in GROUPS])
     ax.set_ylabel(f"Change in {METRIC_SHORT[metric]} (× 100)\nfrom adding the SemEval step")
-    ax.legend(frameon=False, fontsize=9)
     ax.grid(axis="y", alpha=0.3); ax.spines[["top", "right"]].set_visible(False)
     lo, hi = ax.get_ylim(); pad = max(abs(lo), abs(hi)) * 0.2 + 1
     ax.set_ylim(min(lo, 0) - pad, max(hi, 0) + pad)
-    fig.tight_layout(); plt.show()
+    fig.legend(*ax.get_legend_handles_labels(), frameon=False, fontsize=9, loc="upper center",
+               ncol=len(both))
+    fig.tight_layout(rect=(0, 0, 1, 0.92)); plt.show()
 
 
 def _confusion(gold, pred, n):

@@ -4,6 +4,7 @@ We use AutoModelForSequenceClassification(num_labels=2) instead of a custom
 nn.Module so a saved checkpoint loads directly in the app (core/registry.py,
 AspectScorer) and pushes to the Hugging Face Hub with no extra code.
 """
+import inspect
 import os
 
 import torch
@@ -27,6 +28,16 @@ def load_model(name_or_path, num_labels=2):
         name_or_path, num_labels=num_labels, problem_type="regression",
         ignore_mismatched_sizes=True)          # lets a stage-1 checkpoint or a fresh encoder load
     return model, tokenizer
+
+
+def model_inputs(model, enc):
+    """Keep only the inputs this model's forward() accepts. BERT-style tokenizers can return
+    token_type_ids for sentence pairs; ModernBERT has no such input and would raise an error."""
+    accepted = getattr(model, "_dimex_inputs", None)
+    if accepted is None:
+        accepted = set(inspect.signature(model.forward).parameters)
+        model._dimex_inputs = accepted
+    return {k: v for k, v in enc.items() if k in accepted}
 
 
 def init_head_bias(model, value=5.0):
@@ -55,5 +66,5 @@ def predict_va(model, tokenizer, texts, aspects, batch_size=32, max_length=256, 
         for i in range(0, len(texts), batch_size):
             enc = tokenizer(texts[i:i + batch_size], aspects[i:i + batch_size], truncation="only_first",
                             max_length=max_length, padding=True, return_tensors="pt").to(device)
-            out.extend(model(**enc).logits.float().clamp(1, 9).cpu().tolist())
+            out.extend(model(**model_inputs(model, enc)).logits.float().clamp(1, 9).cpu().tolist())
     return [tuple(x) for x in out]

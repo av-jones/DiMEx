@@ -27,6 +27,11 @@ MODEL_NAMES = list(MODELS)
 USE_FAKE = all(cfg["ckpt"] is None for cfg in MODELS.values())
 
 
+def is_real(name):
+    """True when this model has a trained checkpoint (otherwise the fake scorer stands in)."""
+    return MODELS[name]["ckpt"] is not None
+
+
 class AspectScorer:
     """A fine-tuned encoder with a 2-output regression head: (valence, arousal).
 
@@ -103,6 +108,22 @@ class Predictor:
             item.update(valence=v, arousal=a)
             item["label"] = to_label(item)
         return items
+
+    def score_review(self, text):
+        """Score a whole review on the three aspects the models are trained and evaluated on,
+        converted to Druglib's scales: effectiveness 1-5, side effects 1-5, satisfaction 1-10."""
+        from core.labels import rating_label, va_to_rating
+        from core.va_anchors import ASPECT_EFFECT, ASPECT_SAT, ASPECT_SIDE
+        aspects = [(ASPECT_EFFECT, "effectiveness", 5), (ASPECT_SIDE, "side_effect", 5),
+                   (ASPECT_SAT, "satisfaction", 10)]
+        items = [{"aspect": a, "kind": "effectiveness" if k == "satisfaction" else k, "span": text}
+                 for a, k, _ in aspects]
+        out = []
+        for (aspect, kind, scale), (v, a) in zip(aspects, self._va(text, items)):
+            rating = round(va_to_rating(v, kind), 1)
+            out.append({"aspect": aspect, "kind": kind, "valence": v, "arousal": a,
+                        "rating": rating, "scale": scale, "label": rating_label(kind, rating)})
+        return out
 
     def score_field(self, text, aspect, kind):
         """Score one Druglib text field for one aspect. Returns (valence, arousal)."""

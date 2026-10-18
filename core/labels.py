@@ -45,7 +45,28 @@ _CHIP_COLORS = {
     "Worked well": "green", "Some benefit": "gray", "Didn't help": "red",
     "Severe": "red", "Often severe": "red", "Moderate": "orange",
     "Mild": "gray", "Usually mild": "gray",
+    # Druglib's own categories, used for the three trained aspects
+    "Highly effective": "green", "Considerably effective": "green", "Moderately effective": "gray",
+    "Marginally effective": "orange", "Ineffective": "red",
+    "No side effects": "green", "Mild side effects": "gray", "Moderate side effects": "orange",
+    "Severe side effects": "red", "Extremely severe side effects": "red",
+    "Satisfied": "green", "Mixed": "gray", "Dissatisfied": "red",
 }
+
+EFFECT_NAMES = {1: "Ineffective", 2: "Marginally effective", 3: "Moderately effective",
+                4: "Considerably effective", 5: "Highly effective"}
+SIDE_NAMES = {1: "No side effects", 2: "Mild side effects", 3: "Moderate side effects",
+              4: "Severe side effects", 5: "Extremely severe side effects"}
+
+
+def rating_label(kind, rating):
+    """Druglib's category for a predicted rating (effectiveness/side effects 1-5, satisfaction 1-10).
+    Satisfaction uses Gräßer et al.'s bands: <=4 | 5-6 | >=7."""
+    if kind == "effectiveness":
+        return EFFECT_NAMES[int(min(5, max(1, round(rating))))]
+    if kind == "side_effect":
+        return SIDE_NAMES[int(min(5, max(1, round(rating))))]
+    return "Dissatisfied" if rating < 4.5 else "Mixed" if rating < 6.5 else "Satisfied"
 
 
 def chip(label):

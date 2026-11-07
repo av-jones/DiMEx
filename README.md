@@ -55,6 +55,7 @@ python -m training.run push --ckpt ckpts/roberta/stage2 --repo your-team/dimex-r
 | `training/train.py` | Plain PyTorch loop: AdamW, warmup, fp32 (bf16 optional), gradient clipping, early stopping on validation RMSE |
 | `training/evaluate.py` | MAE and RMSE on the rating scales, plus 3-class accuracy and kappa matching Gräßer et al. (2018) |
 | `training/run.py` | Command line for stage 1, stage 2, evaluate, push |
+| `SemEval_EDA.ipynb` | Exploratory analysis of the SemEval-2026 Task 3 (DimABSA) English data; runs in Colab on CPU |
 | `training/charts.py` | Notebook charts: training curves, results vs. Gräßer et al., SemEval-step ablation, confusion matrices |
 | `core/va_anchors.py` | The Druglib-rating ↔ valence-arousal table, shared by training and the app |
 

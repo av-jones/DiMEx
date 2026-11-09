@@ -3,7 +3,7 @@ import streamlit as st
 
 st.set_page_config(page_title="DiMEx", layout="wide")
 
-NAVY, NAVY_HOVER, BODY = "#0B2E59", "#16407A", "#F3F5F8"
+NAVY, NAVY_HOVER, BODY, BAND = "#0B2E59", "#16407A", "#F3F5F8", "#3A5F8F"
 
 # Layout styling. Streamlit has no settings for these, so this is CSS on Streamlit's own page
 # elements (their data-testid attributes) plus the "st-key-card_*" class that core.ui.card() gives
@@ -34,19 +34,27 @@ st.markdown(
     @media (max-width: 1180px) {{ [data-testid="stHeader"]::after {{ display: none; }} }}
     @media (max-width: 760px) {{ [data-testid="stHeader"]::before {{ display: none; }} }}
 
+    /* Drug page: a full-width lighter-navy band right under the header holds the pickers */
+    .st-key-picker_band {{
+        background: {BAND}; width: 100vw !important; max-width: 100vw !important;
+        margin: -24px 0 8px calc(50% - 50vw);
+        padding: 28px max(32px, calc(50vw - 640px)) 32px;
+    }}
+    .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
+
     /* Drug page: large, centered drug and condition pickers */
     .st-key-pick_drug [data-testid="stWidgetLabel"] p, .st-key-pick_condition [data-testid="stWidgetLabel"] p {{
         font-size: 1.05rem; font-weight: 600;
     }}
     .st-key-pick_drug [data-testid="stSelectbox"] div:has(> input),
     .st-key-pick_condition [data-testid="stSelectbox"] div:has(> input) {{
-        min-height: 56px; border-color: #8FA3C0 !important;
+        min-height: 56px; border-color: #FFFFFF !important;
     }}
     .st-key-pick_drug [data-testid="stSelectbox"] div:has(> input) *,
     .st-key-pick_condition [data-testid="stSelectbox"] div:has(> input) * {{ font-size: 1.15rem; }}
 
     /* Body: very light grey, with white cards */
-    [data-testid="stMainBlockContainer"] {{ padding-top: 96px; padding-bottom: 0 !important; }}
+    [data-testid="stMainBlockContainer"] {{ padding-top: 72px; padding-bottom: 0 !important; }}
     [class*="st-key-card_"] {{ background: #FFFFFF; }}
     /* Form fields are white too, so give them an outline to stay visible inside white cards */
     [data-testid="stTextAreaRootElement"], [data-testid="stTextInputRootElement"],

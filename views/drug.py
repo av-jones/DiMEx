@@ -13,15 +13,16 @@ TILES = [("effectiveness", "Effectiveness", "How well it worked, from review tex
 preds = load_predictions()
 model = APP_MODEL
 
-# Large, centered pickers (styled by their keys in app.py)
-_, mid, _ = st.columns([1, 4, 1])
-with mid:
-    st.markdown("<h3 style='text-align:center;margin-bottom:0'>Find patient experiences for a drug</h3>",
-                unsafe_allow_html=True)
-    c1, c2 = st.columns(2, gap="medium")
-    drug = c1.selectbox("Drug name", sorted(preds.drug.unique()), key="pick_drug")
-    condition = c2.selectbox("Condition", sorted(preds[preds.drug == drug].condition.unique()),
-                             key="pick_condition")
+# Large, centered pickers on a full-width band under the header (styled by their keys in app.py)
+with st.container(key="picker_band"):
+    _, mid, _ = st.columns([1, 4, 1])
+    with mid:
+        st.markdown("<h3 style='text-align:center;margin:0'>Find patient experiences for a drug</h3>",
+                    unsafe_allow_html=True)
+        c1, c2 = st.columns(2, gap="medium")
+        drug = c1.selectbox("Drug name", sorted(preds.drug.unique()), key="pick_drug")
+        condition = c2.selectbox("Condition", sorted(preds[preds.drug == drug].condition.unique()),
+                                 key="pick_condition")
 
 s = summarize(preds, drug, condition, model)
 st.title(drug)

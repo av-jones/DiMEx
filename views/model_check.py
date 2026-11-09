@@ -51,5 +51,5 @@ with st.container(border=True):
     results = load_evaluation()
     results.insert(1, "Pretraining", results.Model.map(lambda m: MODELS[m]["domain"]))
     st.dataframe(results.style.highlight_between(subset=["Model"], left=model, right=model,
-                                                 color="#DCEDE8"),
+                                                 color="#E3ECFA"),
                  hide_index=True, width="stretch")

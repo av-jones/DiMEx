@@ -3,9 +3,10 @@
 import altair as alt
 import pandas as pd
 
-INK, MUTED, SOFT, LINE = "#1C1F23", "#5A5E66", "#EEECE6", "#E2E0D8"
-POS, NEG, NEU = "#2F7D6D", "#B8461F", "#6C7079"
-MILD, MOD, DIST = "#F0C9A4", "#DC8A55", "#9E3D17"
+# Whites, cool greys and blues. Intensity and severity read as light -> dark blue.
+INK, MUTED, SOFT, LINE = "#1B2430", "#5B6472", "#E8ECF2", "#D9DEE6"
+POS, NEG, NEU = "#2F6FD0", "#0B2E59", "#8A94A3"      # effectiveness, side effects, satisfaction
+MILD, MOD, DIST = "#BCD2F3", "#5C8FD6", "#0B2E59"     # mild, moderate, distressing
 BAND_COLORS = {"Mild": MILD, "Calm": MILD, "Moderate": MOD, "Distressing": DIST, "Strong": DIST}
 ASPECT_COLORS = {"effectiveness": POS, "side_effect": NEG, "satisfaction": NEU}
 
@@ -97,5 +98,5 @@ def va_map(points=None, dots=None, height=330):
         layers.append(alt.Chart(points).mark_text(align="left", dx=12, fontSize=12, fontWeight=600,
                                                   color=INK).encode(x=x, y=y, text="label:N"))
     return (alt.layer(*layers).properties(height=height)
-            .configure_view(stroke=LINE, fill="#FBFAF7")
+            .configure_view(stroke=LINE, fill="#F7F9FC")
             .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400))

@@ -35,7 +35,7 @@ for col, (kind, name, sub) in zip(cols, TILES):
             continue
         a, b = st.columns([1, 1.4], vertical_alignment="center")
         a.markdown(f"**{name}**")
-        b.markdown(chip(t["label"]))
+        b.markdown(chip(t["label"]), unsafe_allow_html=True)
         st.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:30px'>{t['mean']:.1f}</span> "
                     f"<span style='color:{MUTED}'>/ {t['scale']} avg</span>", unsafe_allow_html=True)
         extra = f" Average stars: {s['avg_stars']:.1f}." if kind == "satisfaction" else ""
@@ -92,7 +92,7 @@ with main:
             with st.container(border=True):
                 st.markdown(highlight(q.text, q.span))
                 left, right = st.columns([3, 1], vertical_alignment="center")
-                left.markdown(f"{chip(q.label)} {q.aspect} · Rated {q.rating}/10")
+                left.markdown(f"{chip(q.label)} {q.aspect} · Rated {q.rating}/10", unsafe_allow_html=True)
                 if right.button("Open review", key=f"open-{q.review_id}-{q.aspect}"):
                     st.session_state.review_id = int(q.review_id)
                     st.switch_page("views/review.py")

@@ -41,12 +41,12 @@ with main:
             a.markdown(f"**{r.aspect}**  \n_“{r.span}”_")
             if show:
                 b.code(f"V {r.valence} · A {r.arousal}", language=None)
-            c.markdown(chip(r.label))
+            c.markdown(chip(r.label), unsafe_allow_html=True)
         st.caption("Scores run from 1 to 9. Low valence is negative; high arousal is intense.")
 
 with side:
     if (review.label == "Severe").any() and first.rating >= 9:
-        st.error("**High rating, severe side effect.** The stars reflect effectiveness more "
+        st.info("**High rating, severe side effect.** The stars reflect effectiveness more "
                  "than tolerability for this patient.")
 
     with st.container(border=True):
@@ -57,9 +57,9 @@ with side:
         st.dataframe(table, width="stretch")
         agree = table.apply(lambda col: col.nunique() == 1).all()
         if agree:
-            st.success("All models agree on this review.")
+            st.info("All models agree on this review.")
         else:
-            st.warning("Models disagree on at least one aspect. Treat this review as uncertain.")
+            st.info("Models disagree on at least one aspect. Treat this review as uncertain.")
 
     with st.container(border=True):
         st.subheader("Patient's own aspect ratings")

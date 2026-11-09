@@ -41,16 +41,23 @@ def typical_severity(labels):
     return "Usually mild"
 
 
-_CHIP_COLORS = {
-    "Worked well": "green", "Some benefit": "gray", "Didn't help": "red",
-    "Severe": "red", "Often severe": "red", "Moderate": "orange",
-    "Mild": "gray", "Usually mild": "gray",
+# Label tones: how much concern a label signals, shown light -> dark in the blue palette.
+_CHIP_TONES = {
+    "Worked well": "good", "Some benefit": "neutral", "Didn't help": "bad",
+    "Severe": "bad", "Often severe": "bad", "Moderate": "warn",
+    "Mild": "neutral", "Usually mild": "neutral",
     # Druglib's own categories, used for the three trained aspects
-    "Highly effective": "green", "Considerably effective": "green", "Moderately effective": "gray",
-    "Marginally effective": "orange", "Ineffective": "red",
-    "No side effects": "green", "Mild side effects": "gray", "Moderate side effects": "orange",
-    "Severe side effects": "red", "Extremely severe side effects": "red",
-    "Satisfied": "green", "Mixed": "gray", "Dissatisfied": "red",
+    "Highly effective": "good", "Considerably effective": "good", "Moderately effective": "neutral",
+    "Marginally effective": "warn", "Ineffective": "bad",
+    "No side effects": "good", "Mild side effects": "neutral", "Moderate side effects": "warn",
+    "Severe side effects": "bad", "Extremely severe side effects": "bad",
+    "Satisfied": "good", "Mixed": "neutral", "Dissatisfied": "bad",
+}
+_TONE_STYLE = {                     # (text, background)
+    "good": ("#1A4F9C", "#E3ECFA"),
+    "neutral": ("#3E4652", "#EDF0F4"),
+    "warn": ("#FFFFFF", "#5C8FD6"),
+    "bad": ("#FFFFFF", "#0B2E59"),
 }
 
 EFFECT_NAMES = {1: "Ineffective", 2: "Marginally effective", 3: "Moderately effective",
@@ -70,8 +77,10 @@ def rating_label(kind, rating):
 
 
 def chip(label):
-    """Streamlit markdown for a colored label, e.g. :red-background[Severe]."""
-    return f":{_CHIP_COLORS.get(label, 'gray')}-background[{label}]"
+    """A small rounded label as HTML; render with st.markdown(..., unsafe_allow_html=True)."""
+    fg, bg = _TONE_STYLE[_CHIP_TONES.get(label, "neutral")]
+    return (f'<span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:0.85em;'
+            f'font-weight:500;color:{fg};background:{bg};white-space:nowrap">{label}</span>')
 
 
 # Map a valence score back onto Druglib's patient rating scales (model check page).

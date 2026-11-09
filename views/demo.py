@@ -73,7 +73,7 @@ with right:
                 with st.container(border=True):
                     a, b = st.columns([2, 1.2], vertical_alignment="center")
                     a.markdown(f"**{SHORT[kind]}**")
-                    b.markdown(chip(r["label"]))
+                    b.markdown(chip(r["label"]), unsafe_allow_html=True)
                     s_col, i_col = st.columns(2, gap="medium")
                     with s_col:
                         st.caption("Score")
@@ -113,10 +113,10 @@ with right:
                 c2.metric("Predicted satisfaction", f"{sat['rating']:.1f} / 10")
                 gap = abs(sat["rating"] - stars)
                 if gap >= 3:
-                    st.warning(f"The model and the stars differ by {gap:.1f} points. Read the review "
+                    st.info(f"The model and the stars differ by {gap:.1f} points. Read the review "
                                "closely: the text and the rating tell different stories.")
                 else:
-                    st.success("The model's estimate is close to the patient's own rating.")
+                    st.info("The model's estimate is close to the patient's own rating.")
 
         st.caption("Intensity is experimental: the model learned it from restaurant and laptop reviews "
                    "(SemEval) and it hasn't been checked against patient-rated intensity yet. "

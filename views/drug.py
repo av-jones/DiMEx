@@ -1,16 +1,19 @@
 import html
 
+import pandas as pd
+
 import streamlit as st
 
 from core.auth import greeting, viewer_name
 
 from core.data import summarize
+from core.aspects import find_terms
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.data import MIN_REVIEWS
 from core.ui import card, highlight, load_pairs, pair_predictions, review_box, scroll_to, serious_flag
-from core.viz import (EFFECT_GROUPS, MUTED, SIDE_GROUPS, breakdown, group_legend,
-                      intensity_gauge, share_bars, split_tag, stacked, star_rating, stars_vs_model, va_map)
+from core.viz import (ASPECT_KEY, EFFECT_GROUPS, MUTED, SIDE_GROUPS, breakdown, group_legend, intensity_gauge,
+                      mark_terms, share_bars, split_tag, stacked, star_rating, stars_vs_model, va_map)
 
 TILES = [("effectiveness", "Effectiveness", "How well it worked, from review text"),
          ("side_effect", "Side effects", "How bad, from review text (higher = worse)"),
@@ -159,6 +162,48 @@ def show(drug, condition):
                 st.session_state.review_id = int(review_id)
                 st.switch_page("views/review.py")
 
+    # Every review for this drug and condition, sorted by the selected metric, 10 at a time
+    ORDERS = {"side_effect": ["Most severe first", "Mildest first"],
+              "effectiveness": ["Worked best first", "Worked least first"],
+              "satisfaction": ["Most satisfied first", "Least satisfied first"]}
+
+    def all_reviews(kind, title):
+        rows = preds[(preds.scope == "review") & (preds.kind == kind)].drop_duplicates("review_id").copy()
+        rows["serious"] = rows.text.map(lambda t: serious_flag(t)[1])
+        with card():
+            head, sort = st.columns([2, 1], vertical_alignment="bottom")
+            head.subheader(title)
+            order = sort.selectbox("Order", ORDERS[kind], key=f"order_{kind}", label_visibility="collapsed")
+            high_first = order in ("Most severe first", "Worked best first", "Most satisfied first")
+            rows = rows.sort_values("score", ascending=not high_first)
+            n_serious = int(rows.serious.sum())
+            if n_serious:
+                rows = pd.concat([rows[rows.serious], rows[~rows.serious]])     # serious events always on top
+                st.markdown(f"<div class='serious-note'>⚠ <b>{n_serious}</b> of {len(rows):,} reviews mention a "
+                            "serious event (such as suicidal thoughts, seizures or a hospital visit). "
+                            "They are shown first; read them in full.</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:13px;color:{MUTED};margin-bottom:6px'>All {len(rows):,} reviews · "
+                        f"highlighted words: {ASPECT_KEY}</div>", unsafe_allow_html=True)
+            page_key = f"shown_{kind}"
+            state = (drug, condition, order)
+            if st.session_state.get(page_key + "_for") != state:
+                st.session_state[page_key + "_for"], st.session_state[page_key] = state, 10
+            shown = st.session_state[page_key]
+            for r in rows.head(shown).itertuples():
+                flag, _ = serious_flag(r.text)
+                with review_box(r.text, f"{kind}_{r.review_id}"):
+                    terms = find_terms(r.text, effect=kind != "side_effect")
+                    st.markdown(f"<div class='dl-quote'>{mark_terms(r.text, terms)}</div>", unsafe_allow_html=True)
+                    left, right = st.columns([4, 1], vertical_alignment="center")
+                    left.markdown(f"{flag} {chip(r.label)} Rated {r.rating}/10", unsafe_allow_html=True)
+                    if right.button("Open review", key=f"open-{kind}-{r.review_id}"):
+                        st.session_state.review_id = int(r.review_id)
+                        st.switch_page("views/review.py")
+            if shown < len(rows):
+                if st.button(f"Show more ({len(rows) - shown:,} left)", key=f"more_{kind}", width="stretch"):
+                    st.session_state[page_key] += 10
+                    st.rerun()
+
 
     st.markdown(f"<h2 class='metric-details' style='margin:12px 0 0;scroll-margin-top:84px'>{NAMES[selected]}: details</h2>",
                 unsafe_allow_html=True)
@@ -204,25 +249,7 @@ def show(drug, condition):
                     st.altair_chart(va_map(dots=s["dots"], height=300), width="stretch")
                     st.markdown(group_legend(SIDE_GROUPS), unsafe_allow_html=True)
 
-        with card():
-            st.subheader("What patients say about side effects")
-            # Reviews that mention a serious event always come first, whatever their scores
-            whole = preds[preds.scope == "review"].drop_duplicates("review_id")
-            flagged = whole[whole.text.map(lambda t: serious_flag(t)[1])]
-            if len(flagged):
-                st.markdown(f"<div class='serious-note'>⚠ <b>{len(flagged)}</b> of {s['n']:,} reviews mention a "
-                            "serious event (such as suicidal thoughts, seizures or a hospital visit). "
-                            "They are shown first; read them in full.</div>", unsafe_allow_html=True)
-            st.caption("Most severe first")
-            shown_ids = set()
-            for r in flagged.head(3).itertuples():
-                shown_ids.add(r.review_id)
-                quote_card(r.text, None, None, f"Rated {r.rating}/10", r.review_id, f"open-serious-{r.review_id}")
-            for q in s["quotes"]:
-                if q.review_id in shown_ids:
-                    continue
-                quote_card(q.text, q.span, q.label, f"{q.aspect} · Rated {q.rating}/10", q.review_id,
-                           f"open-side-{q.review_id}-{q.aspect}")
+        all_reviews("side_effect", "What patients say about side effects")
 
     # ---------------------------------------------------------------- effectiveness
     elif selected == "effectiveness" and "eff_dots" in s:
@@ -234,13 +261,7 @@ def show(drug, condition):
             st.altair_chart(va_map(dots=s["eff_dots"], height=440, groups=EFFECT_GROUPS, big=True), width="stretch")
             st.markdown(group_legend(EFFECT_GROUPS, size=16), unsafe_allow_html=True)
 
-        with card():
-            st.subheader("What patients say about how well it worked")
-            for title, rows in [("Worked best", s["eff_best"]), ("Worked least", s["eff_worst"])]:
-                st.markdown(f"<div class='group-head'>{title}</div>", unsafe_allow_html=True)
-                for r in rows.itertuples():
-                    quote_card(r.text, r.span, r.label, f"Rated {r.stars}/10", r.review_id,
-                               f"open-eff-{title}-{r.review_id}")
+        all_reviews("effectiveness", "What patients say about how well it worked")
 
     # ---------------------------------------------------------------- satisfaction
     elif selected == "satisfaction" and "sat_points" in s:
@@ -269,13 +290,7 @@ def show(drug, condition):
                 st.caption("Compare the gaps: a bigger gap means that experience matters more to "
                            "how satisfied patients are with this drug.")
 
-        with card():
-            st.subheader("What patients say overall")
-            for title, rows in [("Most satisfied", s["sat_best"]), ("Least satisfied", s["sat_worst"])]:
-                st.markdown(f"<div class='group-head'>{title}</div>", unsafe_allow_html=True)
-                for r in rows.itertuples():
-                    quote_card(r.text, None, r.label, f"Rated {r.stars}/10", r.review_id,
-                               f"open-sat-{title}-{r.review_id}")
+        all_reviews("satisfaction", "What patients say overall")
     else:
         st.caption("Details need predictions that include whole-review scores.")
 

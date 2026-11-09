@@ -32,7 +32,7 @@ def score_bar(value, scale, color):
 
 
 STAR_ON, STAR_OFF = "#2F6FD0", "#D3DAE4"
-STAR_NOTE = {"side_effect": "More stars = milder side effects"}
+STAR_NOTE = {}
 
 
 def to_stars(value, scale, kind):

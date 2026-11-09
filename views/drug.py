@@ -4,7 +4,7 @@ from core.data import summarize
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.ui import card, highlight, load_predictions, scroll_to
-from core.viz import (BAND_COLORS, EFFECT_GROUPS, MUTED, SIDE_GROUPS, breakdown, group_legend,
+from core.viz import (EFFECT_GROUPS, MUTED, SIDE_GROUPS, breakdown, group_legend,
                       intensity_gauge, share_bars, split_tag, stacked, star_rating, stars_vs_model, va_map)
 
 TILES = [("effectiveness", "Effectiveness", "How well it worked, from review text"),
@@ -77,7 +77,8 @@ for col, (kind, name, sub) in zip(cols, TILES):
         st.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:30px'>{t['mean']:.1f}</span> "
                     f"<span style='color:{MUTED}'>/ {t['scale']} avg</span>"
                     + (split_tag(kind) if t["split"] else ""), unsafe_allow_html=True)
-        st.markdown(star_rating(t["mean"], t["scale"], kind), unsafe_allow_html=True)
+        if kind != "side_effect":       # stars read as "good"; side effects have no stars
+            st.markdown(star_rating(t["mean"], t["scale"], kind), unsafe_allow_html=True)
         st.markdown(breakdown(t["breakdown"]), unsafe_allow_html=True)
         extra = f" Average stars: {s['avg_stars']:.1f}." if kind == "satisfaction" else ""
         st.caption(sub + ". Bars: share of reviews at each level." + extra)
@@ -121,13 +122,7 @@ if selected == "side_effect":
         with card():
             st.subheader("Side effects patients mention")
             st.markdown(group_legend(SIDE_GROUPS), unsafe_allow_html=True)
-            headings = {"Mild": "Mostly mild", "Moderate": "Mostly moderate", "Distressing": "Mostly distressing"}
-            group = None
-            for e in s["effects"]:
-                if e["group"] != group:
-                    group = e["group"]
-                    st.markdown(f"<div class='group-head'><span style='background:{BAND_COLORS[group]}'></span>"
-                                f"{headings[group]}</div>", unsafe_allow_html=True)
+            for e in s["effects"]:          # already ordered: mostly mild first, then moderate, then distressing
                 n, share, bar, dist = st.columns([2, 0.8, 3, 1.1], vertical_alignment="center")
                 n.markdown(f"**{e['name']}**")
                 share.caption(f"{e['share']:.0%}")

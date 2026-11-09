@@ -74,7 +74,8 @@ with right:
                         st.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:26px'>"
                                     f"{r['rating']:.1f}</span> <span style='color:{MUTED}'>/ {r['scale']}</span>",
                                     unsafe_allow_html=True)
-                        st.markdown(star_rating(r["rating"], r["scale"], kind, size=20), unsafe_allow_html=True)
+                        if kind != "side_effect":
+                            st.markdown(star_rating(r["rating"], r["scale"], kind, size=20), unsafe_allow_html=True)
                         st.markdown(score_bar(r["rating"], r["scale"], ASPECT_COLORS[kind]), unsafe_allow_html=True)
                     with i_col:
                         st.caption("Intensity: how calm or intense it sounds")

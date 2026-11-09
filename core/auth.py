@@ -31,6 +31,11 @@ def _check(email, password):
     return ok and stored is not None
 
 
+def auth_on():
+    """Sign-in is required only when at least one account is set up."""
+    return bool(_users())
+
+
 def signed_in():
     return bool(st.session_state.get("user"))
 
@@ -47,9 +52,6 @@ def login_page():
         with st.container(border=True, key="card_login"):
             st.subheader("Sign in to DiMEx")
             st.caption("DiMEx is a class research project. Access is limited to invited accounts.")
-            if not _users():
-                st.error("No accounts are set up yet. Add them to the app's secrets (see core/auth.py).")
-                return
             with st.form("login", border=False):
                 email = st.text_input("Email", autocomplete="email")
                 password = st.text_input("Password", type="password", autocomplete="current-password")

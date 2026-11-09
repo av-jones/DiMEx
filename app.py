@@ -188,18 +188,19 @@ st.markdown(
 
 st.session_state["_card_n"] = 0        # card keys restart at card_0 on every run (core.ui.card)
 
-from core.auth import login_page, sign_out, signed_in  # noqa: E402
+from core.auth import auth_on, login_page, sign_out, signed_in  # noqa: E402
 
 FOOTER = """
     <div class="dimex-footer">
       <div><strong>DiMEx</strong> · Dimensional Medication Experience Viewer</div>
       <div>Patient-reported experiences, not medical advice.</div>
-      <div>Data: Druglib.com and Drugs.com (UCI ML Repository) · SemEval-2026 Task 3 (DimABSA)</div>
     </div>
 """
 
-# Sign-in gate: until a visitor signs in, only the sign-in form renders (no pages, no data)
-if not signed_in():
+# Sign-in gate, on only when accounts exist in the app's secrets ([users]). If the app is made private on
+# Streamlit Cloud instead, leave [users] out and Streamlit's own sign-in does the job.
+# Until a visitor signs in, only the sign-in form renders (no pages, no data).
+if auth_on() and not signed_in():
     login_page()
     st.markdown(FOOTER, unsafe_allow_html=True)
     st.stop()
@@ -222,8 +223,9 @@ with st.container(key="bottom_nav", horizontal=True):
         with st.container(key=f"bnav_{target.url_path or 'home'}_{'on' if on else 'off'}"):
             st.page_link(target, label=label, icon=icon)
 
-with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", key="signout_row"):
-    st.caption("Signed in as " + st.session_state.user.replace("@", "@\u200b"))   # zero-width space: not a link
-    st.button("Sign out", key="signout", on_click=sign_out, type="tertiary")
+if auth_on():
+    with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", key="signout_row"):
+        st.caption("Signed in as " + st.session_state.user.replace("@", "@\u200b"))   # zero-width space: not a link
+        st.button("Sign out", key="signout", on_click=sign_out, type="tertiary")
 
 st.markdown(FOOTER, unsafe_allow_html=True)

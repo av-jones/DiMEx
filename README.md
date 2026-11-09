@@ -83,7 +83,11 @@ Design notes:
 
 ## Access (sign-in)
 
-The app shows only a sign-in form until a visitor signs in with an invited email and password.
+Two options. Either make the app private on Streamlit Cloud (Settings → Sharing → "Only specific people
+can view this app") and invite viewers by email, or use the app's own sign-in below. The app's sign-in is
+on only when at least one account is set up; with none, the app is open to anyone who can reach it.
+
+With the app's sign-in on, visitors see only a sign-in form until they sign in with an invited email and password.
 Accounts are stored as bcrypt hashes in Streamlit secrets, never in this repo:
 
 1. Run `python scripts/add_user.py name@unf.edu` and type a password (10+ characters). It prints one line.

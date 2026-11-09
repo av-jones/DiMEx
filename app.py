@@ -111,6 +111,8 @@ st.markdown(
     @keyframes dimexGlow  {{ from {{ background-position: 0 center, 0% 0%, 100% 100%; }}
                              to   {{ background-position: 600px center, 100% 60%, 0% 40%; }} }}
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
+    .band-greeting {{ text-align: center; color: rgba(255, 255, 255, 0.82); font-size: 1rem; font-weight: 500;
+                      letter-spacing: .01em; margin-bottom: 2px; }}
     .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}
     .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
     /* "Search by" switch and the popular-condition shortcuts, light on the blue band */

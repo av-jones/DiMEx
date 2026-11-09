@@ -100,3 +100,9 @@ Accounts are stored as bcrypt hashes in Streamlit secrets, never in this repo:
 3. Share the password with that person privately. To remove someone, delete their line.
 
 Locally, the same lines go in `.streamlit/secrets.toml` (git-ignored).
+
+### Greeting names
+
+The Drugs page greets viewers ("Good afternoon, Athlene") in their own time zone. The name comes from an
+optional `[names]` table in secrets, e.g. `"athlenevjones@gmail.com" = "AV"`; otherwise it's guessed from
+addresses like first.last@..., and with no name the greeting is just "Good afternoon".

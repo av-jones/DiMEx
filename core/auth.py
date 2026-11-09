@@ -36,30 +36,66 @@ def auth_on():
     return bool(_users())
 
 
-def viewer_email():
-    """Who is viewing, for display only (never for access decisions).
-    1. this app's own sign-in, if used
-    2. Streamlit Cloud's sign-in on a private app: Cloud passes the viewer in an X-Streamlit-User header.
-       That header is undocumented and may change, so if it's missing or unreadable this returns None."""
-    if st.session_state.get("user"):
-        return st.session_state.user
+def _cloud_viewer():
+    """Streamlit Cloud's sign-in on a private app passes the viewer in an X-Streamlit-User header.
+    That header is undocumented and may change, so anything missing or unreadable gives {}."""
     try:
         raw = st.context.headers.get("X-Streamlit-User")
     except Exception:
-        return None
+        return {}
     if not raw:
-        return None
+        return {}
     import base64
     import json
     for decode in (lambda v: v, lambda v: base64.b64decode(v + "=" * (-len(v) % 4)).decode()):
         try:
             info = json.loads(decode(raw))
-            email = info.get("email") if isinstance(info, dict) else None
-            if email:
-                return email
+            if isinstance(info, dict) and info.get("email"):
+                return info
         except Exception:
             continue
-    return raw if "@" in raw and " " not in raw else None
+    return {"email": raw} if "@" in raw and " " not in raw else {}
+
+
+def viewer_email():
+    """Who is viewing, for display only (never for access decisions): this app's own sign-in if used,
+    else Streamlit Cloud's sign-in on a private app. None if unknown."""
+    return st.session_state.get("user") or _cloud_viewer().get("email")
+
+
+def viewer_name():
+    """A first name to greet the viewer with, or None.
+    Order: a name set in secrets ([names] "email" = "AV"), a name Cloud provides, then a guess from
+    an email like first.last@... (only when the address has a separator, so 'jdoe42@' isn't guessed)."""
+    import re
+    email = viewer_email()
+    if not email:
+        return None
+    try:
+        names = {k.strip().lower(): v for k, v in st.secrets.get("names", {}).items()}
+    except Exception:
+        names = {}
+    if email.lower() in names:
+        return names[email.lower()]
+    cloud = _cloud_viewer()
+    for key in ("given_name", "first_name", "name"):
+        if cloud.get(key):
+            return str(cloud[key]).split()[0]
+    local = email.split("@")[0]
+    parts = [p for p in re.split(r"[._-]", local) if p.isalpha()]
+    return parts[0].capitalize() if len(re.split(r"[._-]", local)) > 1 and parts else None
+
+
+def greeting():
+    """'Good morning/afternoon/evening' in the viewer's own time zone (from the browser)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    try:
+        now = datetime.now(ZoneInfo(st.context.timezone or "America/New_York"))
+    except Exception:
+        now = datetime.now(ZoneInfo("America/New_York"))
+    part = "morning" if 5 <= now.hour < 12 else "afternoon" if now.hour < 17 else "evening"
+    return f"Good {part}"
 
 
 def signed_in():

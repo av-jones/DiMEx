@@ -1,4 +1,8 @@
+import html
+
 import streamlit as st
+
+from core.auth import greeting, viewer_name
 
 from core.data import summarize
 from core.labels import chip
@@ -62,7 +66,9 @@ def _reviews(n):
 with st.container(key="picker_band"):
     _, mid, _ = st.columns([1, 4, 1])
     with mid:
-        st.markdown("<h3 style='text-align:center;margin:0'>Find patient experiences for a drug</h3>",
+        name = viewer_name()
+        st.markdown(f"<div class='band-greeting'>{html.escape(greeting() + (', ' + name if name else ''))}</div>"
+                    "<h3 style='text-align:center;margin:0'>Find patient experiences for a drug</h3>",
                     unsafe_allow_html=True)
         with st.container(horizontal=True, horizontal_alignment="center", key="pick_mode_row"):
             st.segmented_control("Search by", ["Condition", "Drug"], key="pick_mode",

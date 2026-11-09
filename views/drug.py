@@ -4,7 +4,7 @@ from core.data import summarize
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.ui import card, highlight, load_predictions
-from core.viz import MUTED, intensity_gauge, legend, stacked, star_rating, va_map
+from core.viz import BAND_COLORS, MUTED, intensity_gauge, legend, stacked, star_rating, va_map
 
 TILES = [("effectiveness", "Effectiveness", "How well it worked, from review text"),
          ("side_effect", "Side effects", "How bad, from review text (higher = worse)"),
@@ -65,7 +65,15 @@ with main:
     with card():
         st.subheader("Side effects patients mention")
         st.markdown(legend(), unsafe_allow_html=True)
+        headings = {"Mild": "Mostly mild", "Moderate": "Mostly moderate", "Distressing": "Mostly distressing"}
+        group = None
         for e in s["effects"]:
+            if e["group"] != group:
+                group = e["group"]
+                st.markdown(f"<div style='margin-top:10px;font-size:13px;font-weight:600;color:{MUTED};"
+                            f"text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:8px'>"
+                            f"<span style='width:10px;height:10px;border-radius:3px;background:{BAND_COLORS[group]}'>"
+                            f"</span>{headings[group]}</div>", unsafe_allow_html=True)
             n, share, bar, dist = st.columns([2, 0.8, 3, 1.1], vertical_alignment="center")
             n.markdown(f"**{e['name']}**")
             share.caption(f"{e['share']:.0%}")
@@ -75,25 +83,6 @@ with main:
         st.caption("Share of reviews mentioning each side effect, and how intensely they describe it. "
                    "Side effects are found by keyword and each mention is scored separately "
                    "(experimental: the model was trained on whole-review side-effect severity).")
-
-    with card():
-        st.subheader("Same severity, different experience")
-        others = sorted(d for d in preds[preds.condition == condition].drug.unique() if d != drug)
-        if not others:
-            st.caption(f"No other drug for {condition.lower()} to compare with.")
-        else:
-            other = st.selectbox("Compare with", others, key="compare")
-            o = summarize(preds, other, condition, model)
-            for name, summ in [(drug, s), (other, o)]:
-                if not summ or not summ["intensity"]:
-                    continue
-                a, b, c = st.columns([1.2, 3, 1.2], vertical_alignment="center")
-                a.markdown(f"**{name}**")
-                b.markdown(stacked(summ["intensity"]), unsafe_allow_html=True)
-                t = summ["tiles"].get("side_effect")
-                c.caption(f"{t['mean']:.1f} / 5 avg" if t else "")
-            st.caption("Two drugs can have the same average severity but a different mix: more "
-                       "distressing reports for one, more moderate ones for the other. A single score hides this.")
 
     with card():
         st.subheader("What patients say")
@@ -113,18 +102,3 @@ with side:
             st.caption("Each dot is one review's side-effect score")
             st.altair_chart(va_map(dots=s["dots"], height=300), width="stretch")
             st.markdown(legend(), unsafe_allow_html=True)
-
-    if s["mismatch"]:
-        with card():
-            st.markdown("**Stars don't tell the whole story**")
-            st.write(f"{len(s['mismatch'])} reviews give 9–10 stars while describing distressing side effects.")
-            if st.button("See an example"):
-                st.session_state.review_id = int(s["mismatch"][0])
-                st.switch_page("views/review.py")
-
-    with card():
-        st.subheader("How to read this page")
-        st.markdown("- **Scores** use Druglib's patient rating scales (1–5, 1–10).\n"
-                    "- **Intensity** is how strongly the patient expresses it, from calm to intense.\n"
-                    "- Personal experiences, not medical advice.")
-        st.caption("Intensity is experimental until it's checked against patient-rated intensity.")

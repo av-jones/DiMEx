@@ -139,7 +139,7 @@ def va_map(points=None, dots=None, height=330):
         layers.append(alt.Chart(_CORNERS[_CORNERS["align"] == align])
                       .mark_text(align=align, fontSize=11, color=MUTED).encode(x=x, y=y, text="t:N"))
     if dots is not None and len(dots):
-        layers.append(alt.Chart(dots).mark_circle(size=34, opacity=0.75).encode(
+        layers.append(alt.Chart(dots).mark_circle(size=120, opacity=0.4).encode(
             x=x, y=y,
             color=alt.Color("band:N", scale=alt.Scale(domain=["Mild", "Moderate", "Distressing"],
                                                        range=[MILD, MOD, DIST]), legend=None),

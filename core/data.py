@@ -20,9 +20,25 @@ PRED_PATH = Path(__file__).resolve().parent.parent / "data" / "predictions.parqu
 
 # ---------------- Drugs.com side (main pages) ----------------
 
-_EFFECT = [("It finally stopped my panic attacks.", 9), ("My mood lifted after a few weeks.", 8),
-           ("It took the edge off but I still struggle some days.", 6),
-           ("No change at all after two months.", 2)]
+# Effectiveness sentences, filled with the condition's main symptom, and the star rating they suggest
+_EFFECT = [("It finally got my {s} under control.", 9), ("My {s} improved after a few weeks.", 8),
+           ("It helped my {s} a little, but not enough.", 6),
+           ("No change in my {s} at all after two months.", 2)]
+_SYMPTOM = {
+    "Anxiety": "anxiety", "Depression": "depression", "Smoking cessation": "cravings",
+    "Type 2 diabetes": "blood sugar", "Weight loss": "weight", "High blood pressure": "blood pressure",
+    "High cholesterol": "cholesterol", "Migraine": "migraines", "Epilepsy": "seizures",
+    "Insomnia": "sleep", "ADHD": "focus", "Bipolar disorder": "mood swings",
+    "Schizophrenia": "symptoms", "Acne": "acne", "Psoriasis": "skin",
+    "Rheumatoid arthritis": "joint pain", "Osteoarthritis": "knee pain", "Asthma": "breathing",
+    "COPD": "breathing", "Allergies": "allergies", "GERD": "heartburn",
+    "Hypothyroidism": "thyroid levels", "Neuropathic pain": "nerve pain",
+    "Restless legs syndrome": "restless legs", "Fibromyalgia": "pain",
+    "Overactive bladder": "bladder control", "Erectile dysfunction": "symptoms",
+    "Birth control": "cycle", "Chronic pain": "pain", "Panic disorder": "panic attacks",
+    "OCD": "intrusive thoughts", "Atrial fibrillation": "heart rhythm",
+    "Urinary tract infection": "infection",
+}
 _SIDE = ["Some mild nausea the first week, then it faded.",
          "I was wide awake until 3am most nights.",
          "I feel nothing at all, completely numb.",
@@ -31,17 +47,36 @@ _SIDE = ["Some mild nausea the first week, then it faded.",
          "Gained about ten pounds.",
          "A little dizzy when I stand up.",
          "My sex drive is gone and it is awful."]
-_DRUGS = {"Sertraline": ["Anxiety", "Depression"], "Escitalopram": ["Anxiety", "Depression"],
-          "Bupropion": ["Depression", "Smoking cessation"]}
+# Placeholder drugs, each with conditions it is commonly prescribed for
+_DRUGS = {
+    "Sertraline": ["Anxiety", "Depression"], "Escitalopram": ["Anxiety", "Depression"],
+    "Bupropion": ["Depression", "Smoking cessation"],
+    "Metformin": ["Type 2 diabetes"], "Semaglutide": ["Type 2 diabetes", "Weight loss"],
+    "Lisinopril": ["High blood pressure"], "Atorvastatin": ["High cholesterol"],
+    "Sumatriptan": ["Migraine"], "Topiramate": ["Migraine", "Epilepsy"],
+    "Zolpidem": ["Insomnia"], "Trazodone": ["Insomnia", "Depression"],
+    "Methylphenidate": ["ADHD"], "Lamotrigine": ["Bipolar disorder", "Epilepsy"],
+    "Quetiapine": ["Bipolar disorder", "Schizophrenia"], "Isotretinoin": ["Acne"],
+    "Adalimumab": ["Psoriasis", "Rheumatoid arthritis"], "Methotrexate": ["Rheumatoid arthritis"],
+    "Celecoxib": ["Osteoarthritis"], "Albuterol": ["Asthma", "COPD"],
+    "Montelukast": ["Asthma", "Allergies"], "Cetirizine": ["Allergies"], "Omeprazole": ["GERD"],
+    "Levothyroxine": ["Hypothyroidism"], "Gabapentin": ["Neuropathic pain", "Restless legs syndrome"],
+    "Duloxetine": ["Fibromyalgia", "Depression"], "Oxybutynin": ["Overactive bladder"],
+    "Sildenafil": ["Erectile dysfunction"], "Levonorgestrel": ["Birth control"],
+    "Tramadol": ["Chronic pain"], "Clonazepam": ["Panic disorder"],
+    "Fluoxetine": ["OCD", "Depression"], "Apixaban": ["Atrial fibrillation"],
+    "Nitrofurantoin": ["Urinary tract infection"],
+}
 
 
-def fake_reviews(per_group=40, seed=7):
+def fake_reviews(per_group=25, seed=7):
     rng = random.Random(seed)
     rows, rid = [], 1000
     for drug, conditions in _DRUGS.items():
         for cond in conditions:
             for _ in range(per_group):
                 eff, base = rng.choice(_EFFECT)
+                eff = eff.format(s=_SYMPTOM[cond])
                 sides = rng.sample(_SIDE, rng.choice([0, 1, 1, 2]))
                 rating = max(1, min(10, base + rng.choice([-1, 0, 0, 1])))
                 rows.append({"review_id": rid, "drug": drug, "condition": cond,
@@ -113,9 +148,12 @@ def summarize(df, drug, condition, model):
 
     effects = []
     for name, g in side_m.groupby("aspect"):
-        effects.append({"name": name, "share": g.review_id.nunique() / n, "bands": _bands(g.arousal),
+        bands = _bands(g.arousal)
+        effects.append({"name": name, "share": g.review_id.nunique() / n, "bands": bands,
+                        "group": max(bands, key=bands.get),          # the most common intensity
                         "severity": typical_severity(g.label)})
-    effects.sort(key=lambda e: e["share"], reverse=True)
+    order = {"Mild": 0, "Moderate": 1, "Distressing": 2}
+    effects.sort(key=lambda e: (order[e["group"]], -e["share"]))   # mild first, then by how common
 
     ratings = sub.drop_duplicates("review_id").set_index("review_id").rating
     distressing = set(side_w[[intensity_band(a, "side_effect") == "Distressing" for a in side_w.arousal]].review_id)

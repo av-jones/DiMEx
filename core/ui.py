@@ -35,8 +35,7 @@ def scroll_to(class_name):
     """Smoothly scroll the page to the first element with this class after this run renders. Streamlit has no
     scroll API, so a zero-height component runs a small script against the app page."""
     import time
-    import streamlit.components.v1 as components
-    components.html(f"""<script>
+    html = f"""<script>
       // {time.time()}  (unique text so the script runs on every request)
       const go = (tries) => {{
         const el = window.parent.document.querySelector(".{class_name}");
@@ -44,4 +43,9 @@ def scroll_to(class_name):
         else if (tries > 0) setTimeout(() => go(tries - 1), 100);
       }};
       setTimeout(() => go(30), 150);
-    </script>""", height=0)
+    </script>"""
+    if hasattr(st, "iframe"):                   # newer Streamlit: st.iframe replaces components.html
+        st.iframe(html, height=1)
+    else:
+        import streamlit.components.v1 as components
+        components.html(html, height=0)

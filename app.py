@@ -5,6 +5,20 @@ st.set_page_config(page_title="DiMEx", layout="wide")
 
 NAVY, NAVY_HOVER, BODY, BAND = "#0B2E59", "#16407A", "#F3F5F8", "#3A5F8F"
 
+# Wave pattern for the picker band: three faint sine-like curves, tiled horizontally (1200px wide)
+def _waves():
+    import math
+    from urllib.parse import quote
+    paths = []
+    for k, (y0, amp, op) in enumerate([(70, 22, 0.10), (115, 30, 0.08), (160, 18, 0.06)]):
+        pts = " ".join(f"{x},{y0 + amp * math.sin(2 * math.pi * x / 600 + k):.1f}" for x in range(0, 1201, 20))
+        paths.append(f'<polyline points="{pts}" fill="none" stroke="white" stroke-opacity="{op}" stroke-width="2"/>')
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="220">{"".join(paths)}</svg>'
+    return "data:image/svg+xml," + quote(svg)
+
+
+WAVES = _waves()
+
 # Layout styling. Streamlit has no settings for these, so this is CSS on Streamlit's own page
 # elements (their data-testid attributes) plus the "st-key-card_*" class that core.ui.card() gives
 # every card. The nav keeps its full width so its "more" overflow menu still works on narrow screens.
@@ -39,10 +53,24 @@ st.markdown(
 
     /* Drug page: a full-width lighter-navy band right under the header holds the pickers */
     .st-key-picker_band {{
-        background: {BAND}; width: 100vw !important; max-width: 100vw !important;
+        background-color: {BAND}; width: 100vw !important; max-width: 100vw !important;
         margin: -24px 0 8px calc(50% - 50vw);
         padding: 28px max(32px, calc(50vw - 640px)) 32px;
+        position: relative; overflow: hidden;
+        /* Faint, slowly drifting waves (a nod to the valence-arousal curves) plus a soft moving glow */
+        background-image: url("{WAVES}"),
+            radial-gradient(ellipse 45% 70% at 20% 30%, rgba(255, 255, 255, 0.10), transparent 70%),
+            radial-gradient(ellipse 40% 60% at 80% 75%, rgba(140, 185, 255, 0.14), transparent 70%);
+        background-size: 1200px 220px, 200% 200%, 200% 200%;
+        background-repeat: repeat-x, no-repeat, no-repeat;
+        animation: dimexDrift 40s linear infinite, dimexGlow 18s ease-in-out infinite alternate;
     }}
+    @keyframes dimexDrift {{ from {{ background-position: 0 center, 0% 0%, 100% 100%; }}
+                             to   {{ background-position: 1200px center, 0% 0%, 100% 100%; }} }}
+    @keyframes dimexGlow  {{ from {{ background-position: 0 center, 0% 0%, 100% 100%; }}
+                             to   {{ background-position: 600px center, 100% 60%, 0% 40%; }} }}
+    @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
+    .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}
     .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
 
     /* Drug page: large, centered drug and condition pickers */

@@ -15,6 +15,27 @@ NAMES = {kind: name for kind, name, _ in TILES}
 preds = load_predictions()
 model = APP_MODEL
 
+# Both menus list everything. Picking one that doesn't fit the other switches the other to a match:
+# a condition this drug isn't reviewed for switches the drug, and the other way around.
+pairs = preds[["drug", "condition"]].drop_duplicates()
+ALL_DRUGS, ALL_CONDITIONS = sorted(pairs.drug.unique()), sorted(pairs.condition.unique())
+if "pick_drug" not in st.session_state:
+    st.session_state.pick_drug = ALL_DRUGS[0]
+    st.session_state.pick_condition = sorted(pairs[pairs.drug == ALL_DRUGS[0]].condition)[0]
+
+
+def _drug_changed():
+    ok = pairs[pairs.drug == st.session_state.pick_drug].condition
+    if st.session_state.pick_condition not in set(ok):
+        st.session_state.pick_condition = sorted(ok)[0]
+
+
+def _condition_changed():
+    ok = pairs[pairs.condition == st.session_state.pick_condition].drug
+    if st.session_state.pick_drug not in set(ok):
+        st.session_state.pick_drug = sorted(ok)[0]
+
+
 # Large, centered pickers on a full-width band under the header (styled by their keys in app.py)
 with st.container(key="picker_band"):
     _, mid, _ = st.columns([1, 4, 1])
@@ -22,9 +43,12 @@ with st.container(key="picker_band"):
         st.markdown("<h3 style='text-align:center;margin:0'>Find patient experiences for a drug</h3>",
                     unsafe_allow_html=True)
         c1, c2 = st.columns(2, gap="medium")
-        drug = c1.selectbox("Drug name", sorted(preds.drug.unique()), key="pick_drug")
-        condition = c2.selectbox("Condition", sorted(preds[preds.drug == drug].condition.unique()),
-                                 key="pick_condition")
+        drug = c1.selectbox("Drug name", ALL_DRUGS, key="pick_drug", on_change=_drug_changed)
+        condition = c2.selectbox("Condition", ALL_CONDITIONS, key="pick_condition", on_change=_condition_changed)
+        others = sorted(pairs[pairs.drug == drug].condition)
+        if len(others) > 1:
+            st.markdown(f"<div class='picker-note'>{drug} is also reviewed for: "
+                        + ", ".join(c for c in others if c != condition) + "</div>", unsafe_allow_html=True)
 
 s = summarize(preds, drug, condition, model)
 st.title(drug)

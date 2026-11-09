@@ -19,6 +19,19 @@ def _waves():
 
 WAVES = _waves()
 
+
+def _logo_mark():
+    from urllib.parse import quote
+    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+           '<rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="none" stroke="#FFFFFF" stroke-width="2"/>'
+           '<path d="M16 7v18M7 16h18" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1.5" stroke-linecap="round"/>'
+           '<circle cx="22" cy="10" r="3.6" fill="#8FB4F0"/>'
+           '<circle cx="10.5" cy="21" r="2.2" fill="#FFFFFF" fill-opacity=".75"/></svg>')
+    return "data:image/svg+xml," + quote(svg)
+
+
+LOGO = _logo_mark()
+
 # Layout styling. Streamlit has no settings for these, so this is CSS on Streamlit's own page
 # elements (their data-testid attributes) plus the "st-key-card_*" class that core.ui.card() gives
 # every card. The nav keeps its full width so its "more" overflow menu still works on narrow screens.
@@ -34,19 +47,25 @@ st.markdown(
         background: rgba(8, 38, 96, 0.88); height: 64px;         /* deep blue, slightly see-through */
         backdrop-filter: blur(12px) saturate(140%); -webkit-backdrop-filter: blur(12px) saturate(140%);
     }}
+    /* Logo: a small valence-arousal map mark plus the name in Space Grotesk Bold (OFL, static/dimex-logo.*) */
+    @font-face {{ font-family: "DiMEx Logo"; src: url("app/static/dimex-logo.woff2") format("woff2");
+                  font-weight: 700; font-display: block; }}
     [data-testid="stHeader"]::before {{
-        content: "DiMEx"; position: absolute; left: 32px; top: 50%; transform: translateY(-50%);
-        color: #FFFFFF; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em; z-index: 2;
+        content: "DiMEx"; position: absolute; left: 28px; top: 50%; transform: translateY(-50%);
+        padding-left: 40px; line-height: 30px;
+        background: url("{LOGO}") left center / 30px 30px no-repeat;
+        color: #FFFFFF; font-family: "DiMEx Logo", sans-serif; font-size: 1.55rem; font-weight: 700;
+        letter-spacing: -0.02em; z-index: 2;
     }}
     [data-testid="stHeader"]::after {{
-        content: "Dimensional Medication Experience Viewer"; position: absolute; left: 116px; top: 50%;
+        content: "Dimensional Medication Experience Viewer"; position: absolute; left: 160px; top: 50%;
         transform: translateY(-50%); padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, 0.35);
         color: rgba(255, 255, 255, 0.78); font-size: 0.9rem; letter-spacing: 0.01em; z-index: 2;
     }}
     [data-testid="stToolbar"] {{ height: 64px; }}
     /* Tabs start right after the name and tagline, so they never run into it */
-    [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: flex-start; padding-left: 424px; }}
-    @media (max-width: 1180px) {{ [data-testid="stTopNav"] {{ padding-left: 110px; }} }}
+    [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: flex-start; padding-left: 468px; }}
+    @media (max-width: 1180px) {{ [data-testid="stTopNav"] {{ padding-left: 150px; }} }}
     /* Tabs: full-height blocks; hovering shows a 5px white bar along the bottom of the block */
     [data-testid="stTopNavLink"] {{
         color: rgba(255, 255, 255, 0.85) !important; background: transparent !important;
@@ -77,7 +96,7 @@ st.markdown(
         .st-key-bottom_nav {{
             display: flex !important; position: fixed; left: 0; right: 0; bottom: 0; z-index: 999990;
             width: 100vw !important; margin: 0 !important; gap: 0 !important;
-            padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+            padding: 11px 4px calc(6px + env(safe-area-inset-bottom));
             background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px) saturate(140%);
             -webkit-backdrop-filter: blur(12px) saturate(140%); border-top: 1px solid #DDE2E9;
             box-shadow: 0 -4px 16px rgba(11, 46, 89, 0.06);
@@ -219,7 +238,8 @@ st.markdown(
         padding: 28px max(32px, calc(50vw - 640px));
         display: flex; flex-wrap: wrap; gap: 8px 32px; justify-content: space-between;
     }}
-    .dimex-footer strong {{ color: #FFFFFF; font-size: 1rem; }}
+    .dimex-footer strong {{ color: #FFFFFF; font-size: 1.05rem; font-family: "DiMEx Logo", sans-serif;
+                            letter-spacing: -0.02em; }}
     </style>
     """,
     unsafe_allow_html=True,

@@ -58,6 +58,10 @@ def _quick_pick(c):
     _condition_changed()
 
 
+def _swap_mode():
+    ss.pick_mode = "Drug" if ss.pick_mode == "Condition" else "Condition"
+
+
 def _reviews(n):
     return f"{n:,} review" + ("" if n == 1 else "s")
 
@@ -72,14 +76,13 @@ with st.container(key="picker_band"):
                     "<p class='band-sub'>DiMEx reads every review for how negative or positive the experience was, "
                     "and how calm or intense, so you see more than a star rating.</p>",
                     unsafe_allow_html=True)
-        with st.container(horizontal=True, horizontal_alignment="center", key="pick_mode_row"):
-            st.segmented_control("Search by", ["Condition", "Drug"], key="pick_mode",
-                                 label_visibility="collapsed", required=True)
         c1, c2 = st.columns(2, gap="medium")
         if ss.pick_mode == "Condition":
             c1.selectbox("Condition", list(COND_N.index), key="pick_condition", on_change=_condition_changed,
                          index=None, placeholder="Type a condition, e.g. migraine",
                          format_func=lambda c: f"{c} · {_reviews(COND_N[c])}")
+            c1.button("Know the drug name? Search by drug instead →", key="swap_mode",
+                      on_click=_swap_mode, type="tertiary")
             cond = ss.pick_condition
             c2.selectbox("Drug", _drugs_for(cond) if cond else [], key="pick_drug", on_change=_drug_changed,
                          index=None, disabled=not cond,
@@ -90,6 +93,7 @@ with st.container(key="picker_band"):
             c1.selectbox("Drug", list(DRUG_N.index), key="pick_drug", on_change=_drug_changed,
                          index=None, placeholder="Type a drug name, e.g. sertraline",
                          format_func=lambda d: f"{d} · {_reviews(DRUG_N[d])}")
+            c1.button("Search by condition instead →", key="swap_mode", on_click=_swap_mode, type="tertiary")
             drug_ = ss.pick_drug
             c2.selectbox("Condition", _conditions_for(drug_) if drug_ else [], key="pick_condition",
                          on_change=_condition_changed, index=None, disabled=not drug_,

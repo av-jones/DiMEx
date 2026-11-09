@@ -172,13 +172,12 @@ st.markdown(
                  max-width: 720px; margin: 6px auto 12px !important; line-height: 1.5; }}
     .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}
     .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
-    /* "Search by" switch and the popular-condition shortcuts, light on the blue band */
-    .st-key-pick_mode_row {{ margin: 4px 0 -4px; }}
-    .st-key-pick_mode button {{ background: rgba(255, 255, 255, 0.10) !important; color: #FFFFFF !important;
-                                border-color: rgba(255, 255, 255, 0.45) !important; }}
-    .st-key-pick_mode button[aria-checked="true"], .st-key-pick_mode button[kind*="Active"] {{
-        background: #FFFFFF !important; color: {NAVY} !important; }}
-    .st-key-pick_mode button * {{ color: inherit !important; }}
+    /* "Search by drug/condition instead" link under the first box, and the popular shortcuts */
+    .st-key-swap_mode {{ margin-top: -10px; }}
+    .st-key-swap_mode button {{ padding: 0 !important; min-height: 0 !important; color: rgba(255, 255, 255, 0.9) !important; }}
+    .st-key-swap_mode button p {{ font-size: 14px !important; text-decoration: underline;
+                                 text-underline-offset: 3px; text-decoration-color: rgba(255, 255, 255, 0.45); }}
+    .st-key-swap_mode button:hover p {{ color: #FFFFFF !important; text-decoration-color: #FFFFFF; }}
     .st-key-quick_row {{ gap: 4px 6px !important; align-items: center; flex-wrap: wrap; }}
     .st-key-quick_row .picker-note {{ margin: 0; }}
     [class*="st-key-quick_"] button {{

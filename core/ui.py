@@ -23,12 +23,13 @@ def highlight(text, span):
     return text
 
 
-def card(parent=None):
+def card(parent=None, stretch=False):
     """A bordered container with a white background (styled by its key in app.py).
+    stretch=True fills the height of its column, so boxes side by side in a row line up.
     Keys are numbered in page order; app.py resets the counter on every run so they stay stable."""
     n = st.session_state.get("_card_n", 0)
     st.session_state["_card_n"] = n + 1
-    return (parent or st).container(border=True, key=f"card_{n}")
+    return (parent or st).container(border=True, key=f"card_{n}", height="stretch" if stretch else "content")
 
 
 def scroll_to(class_name):

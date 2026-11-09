@@ -60,7 +60,7 @@ selected = st.session_state.setdefault("metric", "side_effect")
 cols = st.columns(3)
 for col, (kind, name, sub) in zip(cols, TILES):
     is_on = kind == selected
-    with col.container(border=True, key=f"metric_{kind}_{'on' if is_on else 'off'}"):
+    with col.container(border=True, key=f"metric_{kind}_{'on' if is_on else 'off'}", height="stretch"):
         # An invisible button covers the whole box (CSS in app.py), so the box itself is clickable
         if st.button(f"Show {name.lower()} details", key=f"select_{kind}"):
             st.session_state.metric = kind
@@ -139,7 +139,7 @@ if selected == "side_effect":
                        "(experimental: the model was trained on whole-review side-effect severity).")
     with side:
         if len(s["dots"]):
-            with card():
+            with card(stretch=True):
                 st.subheader("Where side-effect reports land")
                 st.caption("Each dot is one review's side-effect score")
                 st.altair_chart(va_map(dots=s["dots"], height=300), width="stretch")
@@ -156,7 +156,7 @@ if selected == "side_effect":
 elif selected == "effectiveness" and "eff_dots" in s:
     left, right = st.columns([1, 1.25], gap="large")
     with left:
-        with card():
+        with card(stretch=True):
             st.subheader("How strongly patients describe the benefit")
             st.markdown(intensity_gauge(s["eff_intensity"], "effectiveness", size=230,
                                         caption="Average intensity, from calm (“it helps a bit”) "
@@ -165,7 +165,7 @@ elif selected == "effectiveness" and "eff_dots" in s:
             st.caption("Intensity is how strongly a review expresses the effect, not whether the drug "
                        "worked; the score and bars above show that.")
     with right:
-        with card():
+        with card(stretch=True):
             st.subheader("Where effectiveness reports land")
             st.caption("Each dot is one review's effectiveness score")
             st.altair_chart(va_map(dots=s["eff_dots"], height=300, groups=EFFECT_GROUPS), width="stretch")
@@ -183,7 +183,7 @@ elif selected == "effectiveness" and "eff_dots" in s:
 elif selected == "satisfaction" and "sat_points" in s:
     left, right = st.columns([1.2, 1], gap="large")
     with left:
-        with card():
+        with card(stretch=True):
             st.subheader("Stars vs. what they wrote")
             st.caption("Each dot is one review: the patient's star rating against the model's estimate "
                        "from the text. Dots on the dashed line agree.")
@@ -196,7 +196,7 @@ elif selected == "satisfaction" and "sat_points" in s:
                     st.session_state.review_id = int(s["mismatch"][0])
                     st.switch_page("views/review.py")
     with right:
-        with card():
+        with card(stretch=True):
             st.subheader("What drives satisfaction")
             st.caption("Share of patients who are satisfied (7–10), by their other experiences")
             st.markdown("**By side effects**")

@@ -3,7 +3,7 @@ import streamlit as st
 
 st.set_page_config(page_title="DiMEx", layout="wide")
 
-NAVY, NAVY_HOVER, BODY, BAND = "#0B2E59", "#16407A", "#F3F5F8", "#3A5F8F"
+NAVY, BODY, BAND = "#0B2E59", "#F3F5F8", "#3A5F8F"
 
 # Wave pattern for the picker band: three faint sine-like curves, tiled horizontally (1200px wide)
 def _waves():
@@ -41,10 +41,21 @@ st.markdown(
     }}
     [data-testid="stToolbar"] {{ height: 64px; }}
     [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: center; }}
-    [data-testid="stTopNavLink"] {{ color: rgba(255, 255, 255, 0.85) !important; background: transparent !important; }}
-    [data-testid="stTopNavLink"] * {{ color: inherit !important; }}
-    [data-testid="stTopNavLink"]:hover {{ color: #FFFFFF !important; background: {NAVY_HOVER} !important; }}
-    [data-testid="stTopNavLink"][aria-current="page"] {{ color: #FFFFFF !important; background: rgba(255, 255, 255, 0.16) !important; }}
+    /* Tabs: full-height blocks; hovering shows a 5px white bar along the bottom of the block */
+    [data-testid="stTopNavLink"] {{
+        color: rgba(255, 255, 255, 0.85) !important; background: transparent !important;
+        position: relative; height: 64px; padding: 0 20px !important; border-radius: 0 !important;
+        display: flex; align-items: center;
+    }}
+    [data-testid="stTopNavLink"] * {{ color: inherit !important; font-size: 17px !important; font-weight: 500; }}
+    [data-testid="stTopNavLink"]::after {{
+        content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px;
+        background: #FFFFFF; transform: scaleX(0); transition: transform .15s ease-out;
+    }}
+    [data-testid="stTopNavLink"]:hover {{ color: #FFFFFF !important; }}
+    [data-testid="stTopNavLink"]:hover::after {{ transform: scaleX(1); }}
+    [data-testid="stTopNavLink"][aria-current="page"] {{ color: #FFFFFF !important; background: rgba(255, 255, 255, 0.12) !important; }}
+    [data-testid="stTopNavLinkContainer"] {{ height: 64px; }}
     [data-testid="stToolbarActions"] *, [data-testid="stAppDeployButton"] *, [data-testid="stMainMenu"] * {{
         color: #FFFFFF !important;
     }}
@@ -133,9 +144,10 @@ st.session_state["_card_n"] = 0        # card keys restart at card_0 on every ru
 
 pages = st.navigation(
     [
-        st.Page("views/drug.py", title="Drugs", icon=":material/medication:", default=True),
-        st.Page("views/review.py", title="Review detail", icon=":material/article:"),
-        st.Page("views/demo.py", title="Try a review", icon=":material/edit_note:"),
+        st.Page("views/drug.py", title="Drugs", default=True),
+        st.Page("views/demo.py", title="Try a review"),
+        # Reached through "Open review" buttons only, so it has no tab
+        st.Page("views/review.py", title="Review detail", visibility="hidden"),
     ],
     position="top",
 )

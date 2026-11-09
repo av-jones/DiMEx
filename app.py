@@ -57,13 +57,13 @@ st.markdown(
         letter-spacing: -0.02em; z-index: 2;
     }}
     [data-testid="stHeader"]::after {{
-        content: "Dimensional Medication Experience Viewer"; position: absolute; left: 160px; top: 50%;
+        content: "Dimensional Medication Experience Explorer"; position: absolute; left: 160px; top: 50%;
         transform: translateY(-50%); padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, 0.35);
         color: rgba(255, 255, 255, 0.78); font-size: 0.9rem; letter-spacing: 0.01em; z-index: 2;
     }}
     [data-testid="stToolbar"] {{ height: 64px; }}
     /* Tabs start right after the name and tagline, so they never run into it */
-    [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: flex-start; padding-left: 468px; }}
+    [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: flex-start; padding-left: 484px; }}
     @media (max-width: 1180px) {{ [data-testid="stTopNav"] {{ padding-left: 150px; }} }}
     /* Tabs: full-height blocks; hovering shows a 5px white bar along the bottom of the block */
     [data-testid="stTopNavLink"] {{
@@ -250,7 +250,7 @@ from core.auth import auth_on, login_page, sign_out, signed_in, viewer_email  # 
 
 FOOTER = """
     <div class="dimex-footer">
-      <div><strong>DiMEx</strong> · Dimensional Medication Experience Viewer</div>
+      <div><strong>DiMEx</strong> · Dimensional Medication Experience Explorer</div>
       <div>Patient-reported experiences, not medical advice.</div>
     </div>
 """

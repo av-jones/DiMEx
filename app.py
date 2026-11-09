@@ -128,37 +128,28 @@ st.markdown(
         margin: -24px 0 8px calc(50% - 50vw);
         padding: 28px max(32px, calc(50vw - 640px)) 32px;
         position: relative; overflow: hidden; isolation: isolate;
-        /* Three layers behind the content, each moving on its own:
-             ::after  - the negative-to-positive spectrum (navy left, light blue right), sliding gently back
-                        and forth, with a very soft feathered band of light travelling with it
-             ::before - the faint waves, drifting steadily sideways */
-    }}
-    .st-key-picker_band::after, .st-key-picker_band::before {{
-        content: ""; position: absolute; inset: 0; pointer-events: none;
-    }}
-    .st-key-picker_band::after {{
-        z-index: -2;
-        background-image:
-            linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.015) 20%,
-                rgba(255, 255, 255, 0.04) 40%, rgba(255, 255, 255, 0.055) 50%, rgba(255, 255, 255, 0.04) 60%,
-                rgba(255, 255, 255, 0.015) 80%, rgba(255, 255, 255, 0) 100%),
-            linear-gradient(90deg, #132B54 0%, #1E3D6E 22%, {BAND} 48%, #5A82BE 74%, #7AA0D6 100%);
-        background-size: 70% 100%, 160% 100%;
-        background-repeat: no-repeat;
-        background-position: -150% 0, 0% 0;
-        animation: dimexSpectrum 26s ease-in-out infinite alternate;
-    }}
-    .st-key-picker_band::before {{
-        z-index: -1;
-        background: url("{WAVES}") repeat-x 0 center / 1200px 220px;
+        /* A negative-to-positive spectrum (deep navy on the left to light blue on the right) with faint
+           waves drifting over it; a soft band of light sweeps across slowly (::before, behind the content) */
+        background-image: url("{WAVES}"),
+            linear-gradient(90deg, #17325F 0%, {BAND} 48%, #6C93CC 100%);
+        background-size: 1200px 220px, 100% 100%;
+        background-repeat: repeat-x, no-repeat;
         animation: dimexDrift 40s linear infinite;
     }}
-    @keyframes dimexSpectrum {{ from {{ background-position: -150% 0, 0% 0; }}
-                                to   {{ background-position: 250% 0, 100% 0; }} }}
-    @keyframes dimexDrift {{ from {{ background-position: 0 center; }} to {{ background-position: 1200px center; }} }}
-    @media (prefers-reduced-motion: reduce) {{
-        .st-key-picker_band::after, .st-key-picker_band::before {{ animation: none; }}
+    .st-key-picker_band::before {{
+        content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        /* very soft, wide band whose edges fade out gradually, so it reads as a shift in light, not a stripe */
+        background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.015) 20%,
+                    rgba(255, 255, 255, 0.04) 40%, rgba(255, 255, 255, 0.055) 50%, rgba(255, 255, 255, 0.04) 60%,
+                    rgba(255, 255, 255, 0.015) 80%, rgba(255, 255, 255, 0) 100%) no-repeat;
+        background-size: 70% 100%; background-position: -150% 0;
+        animation: dimexSweep 24s ease-in-out infinite;
     }}
+    @keyframes dimexDrift {{ from {{ background-position: 0 center, 0 0; }}
+                             to   {{ background-position: 1200px center, 0 0; }} }}
+    @keyframes dimexSweep {{ 0% {{ background-position: -150% 0; }} 75%, 100% {{ background-position: 250% 0; }} }}
+    @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band::before {{ animation: none; opacity: 0; }} }}
+    @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
     .band-greeting {{ text-align: center; color: #FFD98A; font-size: 1.05rem; font-weight: 600;
                       letter-spacing: .01em; margin-bottom: 2px; }}
     /* Charts sit on white cards, so draw them on white (Streamlit paints them the page grey) */

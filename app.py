@@ -197,10 +197,11 @@ st.markdown(
     .big-note, .big-note * {{ font-size: 1.2rem !important; line-height: 1.6 !important; color: #3A4352; }}
     .big-note {{ margin: 0 0 8px !important; }}
     .band-head [data-testid="stHeaderActionElements"] {{ display: none !important; }}   /* keeps it centered */
+    .band-head {{ padding-bottom: 0 !important; }}
     @media (max-width: 760px) {{ .band-head {{ font-size: clamp(1.1rem, 6.4vw, 1.45rem) !important; white-space: nowrap; }}
                                   .st-key-picker_band {{ padding-left: 20px !important; padding-right: 20px !important; }} }}
     .band-sub {{ text-align: center; color: rgba(255, 255, 255, 0.88) !important; font-size: 1.05rem;
-                 max-width: 720px; margin: 6px auto 12px !important; line-height: 1.5; }}
+                 max-width: 720px; margin: 10px auto 14px !important; line-height: 1.5; }}
     .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}
     .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
     /* "Search by drug/condition instead" link under the first box, and the popular shortcuts */

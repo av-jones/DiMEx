@@ -82,12 +82,14 @@ for r in sub.head(shown).itertuples():
             scores = (f"<span class='dl-scores'>Patient <b style='color:#1B2430'>{gold:g}</b>"
                       f"{' (' + level + ')' if level else ''} · DiMEx <b style='color:#1B2430'>{pred:.1f}</b>"
                       f" · scale 1–{scale}</span>") if both else ""
+            quote = (f"<div class='dl-quote'>“{html.escape(text)}”</div>" if text
+                     else f"<div class='dl-quote' style='color:{MUTED}'>No text for this part.</div>")
+            # Left two thirds: what they wrote. Right third: patient vs. DiMEx on the scale.
             st.markdown(f"<div class='dl-part{' dl-first' if i == 0 else ''}'>"
-                        f"<div class='dl-head'><span class='dl-name'>{name}</span>{scores}</div>"
-                        + (f"<div class='dl-quote'>“{html.escape(text)}”</div>" if text
-                           else f"<div class='dl-quote' style='color:{MUTED}'>No text for this part.</div>")
+                        f"<div><div class='dl-name'>{name}</div>{quote}</div>"
+                        f"<div class='dl-compare'>{scores}"
                         + (compare_bar(float(gold), float(pred), scale) if both else "")
-                        + "</div>", unsafe_allow_html=True)
+                        + "</div></div>", unsafe_allow_html=True)
 
 if shown < len(sub):
     if st.button(f"Show more ({len(sub) - shown:,} left)", width="stretch"):

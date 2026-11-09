@@ -160,13 +160,18 @@ _CORNERS = pd.DataFrame([
 ])
 
 
-def va_map(points=None, dots=None, height=330):
+SIDE_GROUPS = (["Mild", "Moderate", "Distressing"], [MILD, MOD, DIST], "Intensity")
+EFFECT_GROUPS = (["Effective", "Moderate", "Not effective"], [POS, NEU, NEG], "Effectiveness")
+
+
+def va_map(points=None, dots=None, height=330, groups=SIDE_GROUPS):
     """Valence (x) by arousal (y), 1-9, with plain-language corners.
-    points: DataFrame v, a, label, color (labeled markers). dots: DataFrame v, a, band (scatter)."""
+    points: DataFrame v, a, label, color (labeled markers).
+    dots: DataFrame v, a and a "band" or "group" column, colored by groups = (names, colors, title)."""
     x = alt.X("v:Q", scale=alt.Scale(domain=[1, 9]), title="Valence: negative → positive",
-              axis=alt.Axis(values=[1, 3, 5, 7, 9], grid=False))
+              axis=alt.Axis(values=[1, 3, 5, 7, 9], format="d", grid=False))
     y = alt.Y("a:Q", scale=alt.Scale(domain=[1, 9]), title="Arousal: calm → intense",
-              axis=alt.Axis(values=[1, 3, 5, 7, 9], grid=False))
+              axis=alt.Axis(values=[1, 3, 5, 7, 9], format="d", grid=False))
     mid = pd.DataFrame({"v": [5], "a": [5]})
     layers = [
         alt.Chart(mid).mark_rule(strokeDash=[4, 4], color=LINE).encode(x="v:Q"),
@@ -176,11 +181,11 @@ def va_map(points=None, dots=None, height=330):
         layers.append(alt.Chart(_CORNERS[_CORNERS["align"] == align])
                       .mark_text(align=align, fontSize=11, color=MUTED).encode(x=x, y=y, text="t:N"))
     if dots is not None and len(dots):
+        col = "band" if "band" in dots else "group"
         layers.append(alt.Chart(dots).mark_circle(size=120, opacity=0.4).encode(
             x=x, y=y,
-            color=alt.Color("band:N", scale=alt.Scale(domain=["Mild", "Moderate", "Distressing"],
-                                                       range=[MILD, MOD, DIST]), legend=None),
-            tooltip=[alt.Tooltip("band:N", title="Intensity"), alt.Tooltip("v:Q", title="Valence", format=".1f"),
+            color=alt.Color(f"{col}:N", scale=alt.Scale(domain=groups[0], range=groups[1]), legend=None),
+            tooltip=[alt.Tooltip(f"{col}:N", title=groups[2]), alt.Tooltip("v:Q", title="Valence", format=".1f"),
                      alt.Tooltip("a:Q", title="Arousal", format=".1f")]))
     if points is not None and len(points):
         layers.append(alt.Chart(points).mark_point(size=220, filled=True, opacity=1, stroke="white",
@@ -191,5 +196,45 @@ def va_map(points=None, dots=None, height=330):
         layers.append(alt.Chart(points).mark_text(align="left", dx=12, fontSize=12, fontWeight=600,
                                                   color=INK).encode(x=x, y=y, text="label:N"))
     return (alt.layer(*layers).properties(height=height)
+            .configure_view(stroke=LINE, fill="#F7F9FC")
+            .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400))
+
+
+def group_legend(groups):
+    names, colors, _ = groups
+    items = "".join(f'<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">'
+                    f'<span style="width:10px;height:10px;border-radius:3px;background:{c}"></span>{n}</span>'
+                    for n, c in zip(names, colors))
+    return f'<div style="font-size:13px;color:{MUTED}">{items}</div>'
+
+
+def share_bars(rows, color=POS):
+    """Labeled bars: rows = [(label, share 0-1, n reviews)]."""
+    out = []
+    for label, share, n in rows:
+        out.append(
+            f'<div style="display:grid;grid-template-columns:150px 1fr 92px;align-items:center;gap:10px;margin:7px 0">'
+            f'<span style="font-size:13px;color:{INK}">{label}</span>'
+            f'<div role="img" aria-label="{share:.0%}" style="height:12px;background:{SOFT};border-radius:6px;overflow:hidden">'
+            f'<div style="height:100%;width:{share * 100:.0f}%;background:{color};border-radius:6px"></div></div>'
+            f'<span style="font-size:13px;color:{MUTED};text-align:right">{share:.0%} '
+            f'<span style="font-size:11px">({n} reviews)</span></span></div>')
+    return "".join(out)
+
+
+def stars_vs_model(points, height=280):
+    """Patients' star ratings (x) against the model's satisfaction estimate (y), with a 'perfect
+    agreement' diagonal. points: DataFrame stars, satisfaction."""
+    line = pd.DataFrame({"x": [1, 10], "y": [1, 10]})
+    base_x = alt.X("stars:Q", scale=alt.Scale(domain=[0.5, 10.5]), title="Patient's stars",
+                   axis=alt.Axis(values=list(range(1, 11)), grid=False))
+    base_y = alt.Y("satisfaction:Q", scale=alt.Scale(domain=[0.5, 10.5]), title="Model's satisfaction estimate",
+                   axis=alt.Axis(values=[1, 4, 7, 10], grid=False))
+    diag = alt.Chart(line).mark_line(strokeDash=[4, 4], color=LINE).encode(x="x:Q", y="y:Q")
+    dots = alt.Chart(points).mark_circle(size=120, opacity=0.4, color=POS).encode(
+        x=base_x, y=base_y,
+        tooltip=[alt.Tooltip("stars:Q", title="Stars"),
+                 alt.Tooltip("satisfaction:Q", title="Model estimate", format=".1f")])
+    return (alt.layer(diag, dots).properties(height=height)
             .configure_view(stroke=LINE, fill="#F7F9FC")
             .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400))

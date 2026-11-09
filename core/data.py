@@ -191,8 +191,59 @@ def summarize(df, drug, condition, model):
             used.add(row.aspect)
         if len(quotes) == 3:
             break
-    return {"n": n, "tiles": tiles, "intensity": intensity, "dots": dots, "effects": effects,
-            "mismatch": mismatch, "quotes": quotes, "avg_stars": float(ratings.mean())}
+    out = {"n": n, "tiles": tiles, "intensity": intensity, "dots": dots, "effects": effects,
+           "mismatch": mismatch, "quotes": quotes, "avg_stars": float(ratings.mean())}
+    if len(whole):
+        out.update(_drilldowns(sub, whole, ment, ratings))
+    return out
+
+
+def _effect_group(score):
+    return "Effective" if score >= 3.5 else "Moderate" if score >= 2.5 else "Not effective"
+
+
+def _side_group(score):
+    return "Mild or none" if score < 2.5 else "Moderate" if score < 3.5 else "Severe"
+
+
+def _share_satisfied(table, column, groups):
+    """[(group, share of its reviews that are satisfied, number of reviews)] for each group."""
+    rows = []
+    for name in groups:
+        g = table[table[column] == name]
+        rows.append((name, float((g.satisfaction >= 6.5).mean()) if len(g) else 0.0, len(g)))
+    return rows
+
+
+def _drilldowns(sub, whole, ment, ratings):
+    """Extra data for the effectiveness and satisfaction detail views."""
+    table = whole.pivot_table(index="review_id", columns="kind", values="score")
+    table["stars"] = ratings.reindex(table.index)
+    texts = sub.drop_duplicates("review_id").set_index("review_id").text
+    table["text"] = texts.reindex(table.index)
+
+    eff = whole[whole.kind == "effectiveness"].set_index("review_id")
+    eff_spans = ment[ment.kind == "effectiveness"].drop_duplicates("review_id").set_index("review_id").span
+    eff_dots = pd.DataFrame({"v": eff.valence, "a": eff.arousal, "group": [_effect_group(x) for x in eff.score]})
+    eff_q = eff.assign(span=eff_spans.reindex(eff.index), text=texts.reindex(eff.index),
+                       stars=ratings.reindex(eff.index)).reset_index().sort_values("score")
+    sat = whole[whole.kind == "satisfaction"].set_index("review_id")
+    sat_q = sat.assign(text=texts.reindex(sat.index), stars=ratings.reindex(sat.index)).reset_index()
+
+    table["side_group"] = [_side_group(x) for x in table.side_effect]
+    table["effect_group"] = [_effect_group(x) for x in table.effectiveness]
+    gap = (table.satisfaction - table.stars).abs()
+    return {
+        "eff_intensity": float(eff.arousal.mean()),
+        "eff_dots": eff_dots,
+        "eff_best": eff_q.tail(2).iloc[::-1], "eff_worst": eff_q.head(2),
+        "sat_intensity": float(sat.arousal.mean()),
+        "sat_points": table[["stars", "satisfaction"]].dropna().reset_index(),
+        "sat_agree": float((gap <= 2).mean()),
+        "sat_by_side": _share_satisfied(table, "side_group", ["Mild or none", "Moderate", "Severe"]),
+        "sat_by_effect": _share_satisfied(table, "effect_group", ["Effective", "Moderate", "Not effective"]),
+        "sat_best": sat_q.sort_values("score").tail(2).iloc[::-1], "sat_worst": sat_q.sort_values("score").head(2),
+    }
 
 
 # ---------------- Druglib side (model check page) ----------------

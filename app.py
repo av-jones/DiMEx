@@ -59,6 +59,24 @@ st.markdown(
     /* Body: very light grey, with white cards */
     [data-testid="stMainBlockContainer"] {{ padding-top: 72px; padding-bottom: 0 !important; }}
     [class*="st-key-card_"] {{ background: #FFFFFF; }}
+    /* Drug page metric boxes: the whole box is clickable through an invisible button laid over it */
+    [class*="st-key-metric_"] {{ background: #FFFFFF; position: relative; transition: box-shadow .15s, border-color .15s; }}
+    [class*="st-key-metric_"]:hover {{ border-color: #8FA3C0 !important; box-shadow: 0 4px 14px rgba(11, 46, 89, 0.10); }}
+    [class*="st-key-metric_"][class*="_on"] {{ border: 2px solid {NAVY} !important; box-shadow: 0 4px 16px rgba(11, 46, 89, 0.14); }}
+    [class*="st-key-select_"] {{
+        position: absolute !important; inset: 0; z-index: 3; margin: 0 !important;
+        width: 100% !important; height: 100% !important;
+    }}
+    [class*="st-key-select_"] [data-testid="stButton"], [class*="st-key-select_"] [data-testid="stButton"] > * {{
+        width: 100% !important; height: 100% !important;
+    }}
+    [class*="st-key-select_"] button {{ width: 100% !important; height: 100% !important; opacity: 0; cursor: pointer; }}
+    [class*="st-key-metric_"]:has(button:focus-visible) {{ outline: 3px solid #5C8FD6; outline-offset: 2px; }}
+    .metric-hint {{ font-size: 12px; font-weight: 600; color: #2F6FD0; text-align: right; }}
+    .group-head {{ margin-top: 10px; font-size: 13px; font-weight: 600; color: #5B6472; text-transform: uppercase;
+                   letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }}
+    .group-head span {{ width: 10px; height: 10px; border-radius: 3px; display: inline-block; }}
+
     /* Form fields are white too, so give them an outline to stay visible inside white cards */
     [data-testid="stTextAreaRootElement"], [data-testid="stTextInputRootElement"],
     [data-testid="stNumberInputContainer"], [data-testid="stSelectbox"] div:has(> input) {{

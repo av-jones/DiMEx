@@ -74,7 +74,7 @@ def fake_reviews(per_group=25, seed=7):
     rows, rid = [], 1000
     for drug, conditions in _DRUGS.items():
         for cond in conditions:
-            for _ in range(per_group):
+            for _ in range(rng.randint(per_group // 2, per_group * 4)):   # uneven, like real data
                 eff, base = rng.choice(_EFFECT)
                 eff = eff.format(s=_SYMPTOM[cond])
                 sides = rng.sample(_SIDE, rng.choice([0, 1, 1, 2]))
@@ -83,6 +83,43 @@ def fake_reviews(per_group=25, seed=7):
                              "rating": rating, "text": " ".join([eff] + sides)})
                 rid += 1
     return pd.DataFrame(rows)
+
+
+MIN_REVIEWS = 10   # drug-condition pairs with fewer reviews are too thin to summarize (keeps ~92% of Drugs.com)
+
+# Drugs.com condition names were damaged when the dataset was scraped: some lost a trailing "r"
+# ("Bipolar Disorde"), some lost leading letters ("ibromyalgia"), some are drug-name fragments
+# ("min / sitagliptin)") or page text ("3</span> users found this comment helpful.").
+_ADD_R = ("Disorde", "Bladde", "Othe", "Cance", "Ulce", "Zoste", "Flutte", "Shoulde", "Feve")
+_FRONT = {"ibromyalgia": "Fibromyalgia", "mance Anxiety": "Performance Anxiety", "emale ": "Female ",
+          "atigue": "Fatigue", "acial ": "Facial ", "zen Shoulde": "Frozen Shoulde", "amilial ": "Familial ",
+          "lic Acid": "Folic Acid", "cal Segmental": "Focal Segmental", "actor IX": "Factor IX",
+          "llicle ": "Follicle ", "llicular ": "Follicular ", "ailure ": "Failure ", "unctional ": "Functional ",
+          "ungal ": "Fungal ", "ibrocystic ": "Fibrocystic "}
+_DROP = {"Not Listed / Other"}
+
+
+def clean_condition(name):
+    """Repaired condition name, or None for entries that aren't a condition."""
+    if not isinstance(name, str) or "</span>" in name:
+        return None
+    name = " ".join(name.split())
+    for broken, fixed in _FRONT.items():
+        if name.startswith(broken):
+            name = fixed + name[len(broken):]
+            break
+    words = name.split(" ")
+    words = [w + "r" if w.endswith(_ADD_R) or w.split("/")[-1] in _ADD_R else w for w in words]
+    name = " ".join(words)
+    if name in _DROP or (name[:1].islower() and not name.startswith("von ")):
+        return None                       # unrepairable fragments
+    return name
+
+
+def pair_counts(df, min_reviews=MIN_REVIEWS):
+    """Reviews per drug-condition pair, keeping pairs with at least min_reviews."""
+    n = df.groupby(["drug", "condition"]).review_id.nunique().rename("n").reset_index()
+    return n[n.n >= min_reviews].sort_values("n", ascending=False, ignore_index=True)
 
 
 def batch_score(reviews, model_names=MODEL_NAMES):

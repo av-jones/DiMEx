@@ -15,6 +15,11 @@ def load_predictions():
     return data.load_predictions()
 
 
+@st.cache_data
+def pair_counts(df):
+    return data.pair_counts(df)
+
+
 def highlight(text, span):
     """Markdown with the span highlighted. Escapes $ so Streamlit doesn't read it as math."""
     text = text.replace("$", r"\$")

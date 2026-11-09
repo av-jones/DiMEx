@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from core.data import PRED_PATH, batch_score  # noqa: E402
+from core.data import PRED_PATH, batch_score, clean_condition  # noqa: E402
 from core.registry import APP_MODEL  # noqa: E402
 
 
@@ -19,6 +19,7 @@ def load_drugscom(paths):
     df = pd.concat([pd.read_csv(p, sep="\t") for p in paths], ignore_index=True)
     df = df.rename(columns={"Unnamed: 0": "review_id", "drugName": "drug", "review": "text"})
     df["text"] = df.text.str.strip('"').str.replace("&#039;", "'", regex=False)
+    df["condition"] = df.condition.map(clean_condition)     # repairs scrape damage, drops junk
     return df.dropna(subset=["condition"])[["review_id", "drug", "condition", "rating", "text"]]
 
 

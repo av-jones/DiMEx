@@ -83,6 +83,22 @@ st.markdown(
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
     .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}
     .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
+    /* "Search by" switch and the popular-condition shortcuts, light on the blue band */
+    .st-key-pick_mode_row {{ margin: 4px 0 -4px; }}
+    .st-key-pick_mode button {{ background: rgba(255, 255, 255, 0.10) !important; color: #FFFFFF !important;
+                                border-color: rgba(255, 255, 255, 0.45) !important; }}
+    .st-key-pick_mode button[aria-checked="true"], .st-key-pick_mode button[kind*="Active"] {{
+        background: #FFFFFF !important; color: {NAVY} !important; }}
+    .st-key-pick_mode button * {{ color: inherit !important; }}
+    .st-key-quick_row {{ gap: 4px 6px !important; align-items: center; flex-wrap: wrap; }}
+    .st-key-quick_row .picker-note {{ margin: 0; }}
+    [class*="st-key-quick_"] button {{
+        color: #FFFFFF !important; background: rgba(255, 255, 255, 0.12) !important; border-radius: 999px !important;
+        padding: 2px 12px !important; min-height: 0 !important; font-size: 13px;
+    }}
+    [class*="st-key-quick_"] button:hover {{ background: rgba(255, 255, 255, 0.24) !important; }}
+    [class*="st-key-quick_"] button * {{ color: inherit !important; font-size: 13px !important; }}
+    .st-key-picker_band [data-testid="stSelectbox"] div:has(> input) input::placeholder {{ color: #6B7685; }}
 
     /* Drug page: large, centered drug and condition pickers */
     .st-key-pick_drug [data-testid="stWidgetLabel"] p, .st-key-pick_condition [data-testid="stWidgetLabel"] p {{

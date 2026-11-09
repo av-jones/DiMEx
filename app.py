@@ -18,7 +18,7 @@ st.markdown(
         color: #FFFFFF; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em; z-index: 2;
     }}
     [data-testid="stHeader"]::after {{
-        content: "Dimensional Medical Experience Viewer"; position: absolute; left: 116px; top: 50%;
+        content: "Dimensional Medication Experience Viewer"; position: absolute; left: 116px; top: 50%;
         transform: translateY(-50%); padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, 0.35);
         color: rgba(255, 255, 255, 0.78); font-size: 0.9rem; letter-spacing: 0.01em; z-index: 2;
     }}
@@ -87,7 +87,7 @@ pages.run()
 st.markdown(
     """
     <div class="dimex-footer">
-      <div><strong>DiMEx</strong> · Dimensional Medical Experience Viewer</div>
+      <div><strong>DiMEx</strong> · Dimensional Medication Experience Viewer</div>
       <div>Patient-reported experiences, not medical advice.</div>
       <div>Data: Druglib.com and Drugs.com (UCI ML Repository) · SemEval-2026 Task 3 (DimABSA)</div>
     </div>

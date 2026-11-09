@@ -41,23 +41,24 @@ def typical_severity(labels):
     return "Usually mild"
 
 
-# Label tones: how much concern a label signals, shown light -> dark in the blue palette.
+# Label tones: blue for good outcomes, grey for neutral; severity uses green (mild), yellow, red.
 _CHIP_TONES = {
     "Worked well": "good", "Some benefit": "neutral", "Didn't help": "bad",
     "Severe": "bad", "Often severe": "bad", "Moderate": "warn",
-    "Mild": "neutral", "Usually mild": "neutral",
+    "Mild": "mild", "Usually mild": "mild",
     # Druglib's own categories, used for the three trained aspects
     "Highly effective": "good", "Considerably effective": "good", "Moderately effective": "neutral",
     "Marginally effective": "warn", "Ineffective": "bad",
-    "No side effects": "good", "Mild side effects": "neutral", "Moderate side effects": "warn",
+    "No side effects": "mild", "Mild side effects": "mild", "Moderate side effects": "warn",
     "Severe side effects": "bad", "Extremely severe side effects": "bad",
     "Satisfied": "good", "Mixed": "neutral", "Dissatisfied": "bad",
 }
 _TONE_STYLE = {                     # (text, background)
     "good": ("#1A4F9C", "#E3ECFA"),
     "neutral": ("#3E4652", "#EDF0F4"),
-    "warn": ("#FFFFFF", "#5C8FD6"),
-    "bad": ("#FFFFFF", "#0B2E59"),
+    "mild": ("#1E6B3F", "#DDF2E5"),     # green
+    "warn": ("#6B4A00", "#FCEFC7"),     # yellow
+    "bad": ("#FFFFFF", "#C83E3E"),      # red
 }
 
 EFFECT_NAMES = {1: "Ineffective", 2: "Marginally effective", 3: "Moderately effective",

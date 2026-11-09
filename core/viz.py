@@ -6,7 +6,10 @@ import pandas as pd
 # Whites, cool greys and blues. Intensity and severity read as light -> dark blue.
 INK, MUTED, SOFT, LINE = "#1B2430", "#5B6472", "#E8ECF2", "#D9DEE6"
 POS, NEG, NEU = "#2F6FD0", "#0B2E59", "#8A94A3"      # effectiveness, side effects, satisfaction
-MILD, MOD, DIST = "#BCD2F3", "#5C8FD6", "#0B2E59"     # mild, moderate, distressing
+MILD, MOD, DIST = "#5BBF85", "#F2C14E", "#C83E3E"     # mild (green), moderate (yellow), distressing (red)
+# Intensity of effectiveness and satisfaction isn't good or bad (strong relief is intense), so their
+# gauges use a neutral light-to-dark blue instead of green/yellow/red.
+CALM_B, MOD_B, STRONG_B = "#BCD2F3", "#5C8FD6", "#0B2E59"
 BAND_COLORS = {"Mild": MILD, "Calm": MILD, "Moderate": MOD, "Distressing": DIST, "Strong": DIST}
 ASPECT_COLORS = {"effectiveness": POS, "side_effect": NEG, "satisfaction": NEU}
 
@@ -76,7 +79,8 @@ def intensity_gauge(arousal, kind="side_effect", size=200, caption=None):
     (nx, ny) = pt(a, r - 22)
     edges = [1, *INTENSITY_CUTS, 9]
     bands = "".join(arc(edges[i] + (0.04 if i else 0), edges[i + 1] - (0.04 if i < 2 else 0), c)
-                    for i, c in enumerate((MILD, MOD, DIST)))
+                    for i, c in enumerate((MILD, MOD, DIST) if kind == "side_effect"
+                                          else (CALM_B, MOD_B, STRONG_B)))
     word = intensity_band(a, kind)
     low = "Mild" if kind == "side_effect" else "Calm"
     caption_html = (f'<div style="font-size:12px;color:{MUTED};text-align:center;margin-top:2px">{caption}</div>'

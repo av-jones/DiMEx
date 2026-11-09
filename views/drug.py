@@ -22,10 +22,8 @@ with mid:
     drug = c1.selectbox("Drug name", sorted(preds.drug.unique()), key="pick_drug")
     condition = c2.selectbox("Condition", sorted(preds[preds.drug == drug].condition.unique()),
                              key="pick_condition")
-st.divider()
 
 s = summarize(preds, drug, condition, model)
-st.caption("PATIENT-REPORTED EXPERIENCES")
 st.title(drug)
 st.caption(f"For {condition.lower()} · {s['n']:,} reviews analyzed · Source: Drugs.com")
 

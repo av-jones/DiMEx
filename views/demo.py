@@ -5,7 +5,7 @@ from core.explain import intensity_band, key_sentences, summary_sentence, why
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.ui import card, load_predictor
-from core.viz import ASPECT_COLORS, MUTED, intensity_meter, score_bar, va_map
+from core.viz import ASPECT_COLORS, MUTED, intensity_meter, score_bar, star_rating, va_map
 
 EXAMPLES = {
     "Works, but rough start": "Zoloft fixed my anxiety within a month, which honestly felt like a miracle. "
@@ -74,6 +74,7 @@ with right:
                         st.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:26px'>"
                                     f"{r['rating']:.1f}</span> <span style='color:{MUTED}'>/ {r['scale']}</span>",
                                     unsafe_allow_html=True)
+                        st.markdown(star_rating(r["rating"], r["scale"], kind, size=20), unsafe_allow_html=True)
                         st.markdown(score_bar(r["rating"], r["scale"], ASPECT_COLORS[kind]), unsafe_allow_html=True)
                     with i_col:
                         st.caption("Intensity")

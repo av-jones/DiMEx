@@ -28,6 +28,34 @@ def score_bar(value, scale, color):
 </div>"""
 
 
+STAR_ON, STAR_OFF = "#2F6FD0", "#D3DAE4"
+STAR_NOTE = {"side_effect": "More stars = milder side effects"}
+
+
+def to_stars(value, scale, kind):
+    """A score as 0-5 stars, where more stars is always better. Side-effect severity (higher is
+    worse) is flipped; satisfaction (1-10) is halved."""
+    if kind == "side_effect":
+        value = scale + 1 - value
+    return max(0.0, min(5.0, value * 5 / scale))
+
+
+def star_rating(value, scale, kind, size=22):
+    """Five stars filled to the score, with fractional fill (e.g. 3.6 stars)."""
+    stars = to_stars(value, scale, kind)
+    row = "★★★★★"
+    note = STAR_NOTE.get(kind, "")
+    note_html = f'<span style="font-size:12px;color:{MUTED};margin-left:8px">{note}</span>' if note else ""
+    return f"""
+<div role="img" aria-label="{stars:.1f} out of 5 stars" style="display:flex;align-items:center;margin:2px 0 4px">
+  <span style="position:relative;display:inline-block;font-size:{size}px;line-height:1;letter-spacing:2px">
+    <span style="color:{STAR_OFF}">{row}</span>
+    <span style="position:absolute;left:0;top:0;width:{stars / 5 * 100:.0f}%;overflow:hidden;white-space:nowrap;color:{STAR_ON}">{row}</span>
+  </span>
+  <span style="font-size:13px;color:{MUTED};margin-left:8px">{stars:.1f} / 5</span>{note_html}
+</div>"""
+
+
 def intensity_meter(arousal):
     """Nine segments, filled up to the arousal score; light to dark as intensity rises."""
     segs = []

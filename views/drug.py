@@ -72,9 +72,10 @@ with st.container(key="picker_band"):
     with mid:
         name = viewer_name()
         st.markdown(f"<div class='band-greeting'>{html.escape(greeting() + (', ' + name if name else ''))}</div>"
-                    "<h3 style='text-align:center;margin:0'>Explore the full range of patient experience, not just the star rating</h3>"
-                    "<p class='band-sub'>See where each drug's reviews fall on valence (negative to positive) "
-                    "and arousal (calm to intense).</p>",
+                    "<h3 style='text-align:center;margin:0'>One star rating can't tell you why. Three scores can.</h3>"
+                    "<p class='band-sub'>DiMEx rates each review for effectiveness, side effects and overall "
+                    "satisfaction, and shows how negative or positive (valence) and how calm or intense "
+                    "(arousal) each experience was.</p>",
                     unsafe_allow_html=True)
         c1, c2 = st.columns(2, gap="medium")
         if ss.pick_mode == "Condition":

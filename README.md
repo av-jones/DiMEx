@@ -7,7 +7,6 @@ Dimensional aspect-based sentiment analysis of patient drug reviews. A Streamlit
 | Drugs | Effectiveness breakdown, side effects with typical severity, patient quotes, stars-vs-text mismatches | Precomputed predictions on Drugs.com |
 | Review detail | One review with aspect spans, labels, optional valence/arousal scores, and a six-model comparison | Precomputed predictions |
 | Try a review | Live scoring of any typed review | Runs the selected model live |
-| Model check | Druglib test reviews: model scores next to patient ratings, RMSE and MAE per model | Druglib test split |
 
 ## Run it
 

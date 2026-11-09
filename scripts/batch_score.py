@@ -1,4 +1,4 @@
-"""Score every Drugs.com review with every model and save data/predictions.parquet.
+"""Score every Drugs.com review with the app's model (APP_MODEL) and save data/predictions.parquet.
 
 Run this in Colab (GPU) after training, then upload the parquet file to a
 private Hugging Face dataset repo or copy it into data/.
@@ -12,6 +12,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from core.data import PRED_PATH, batch_score  # noqa: E402
+from core.registry import APP_MODEL  # noqa: E402
 
 
 def load_drugscom(paths):
@@ -23,7 +24,7 @@ def load_drugscom(paths):
 
 if __name__ == "__main__":
     reviews = load_drugscom(sys.argv[1:])
-    preds = batch_score(reviews)
+    preds = batch_score(reviews, [APP_MODEL])
     PRED_PATH.parent.mkdir(exist_ok=True)
     preds.to_parquet(PRED_PATH, index=False)
     print(f"Saved {len(preds):,} rows to {PRED_PATH}")

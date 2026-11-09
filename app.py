@@ -17,6 +17,11 @@ st.markdown(
         content: "DiMEx"; position: absolute; left: 32px; top: 50%; transform: translateY(-50%);
         color: #FFFFFF; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em; z-index: 2;
     }}
+    [data-testid="stHeader"]::after {{
+        content: "Medication-Experience Viewer"; position: absolute; left: 116px; top: 50%;
+        transform: translateY(-50%); padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, 0.35);
+        color: rgba(255, 255, 255, 0.78); font-size: 0.9rem; letter-spacing: 0.01em; z-index: 2;
+    }}
     [data-testid="stToolbar"] {{ height: 64px; }}
     [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: center; }}
     [data-testid="stTopNavLink"] {{ color: rgba(255, 255, 255, 0.85) !important; background: transparent !important; }}
@@ -26,7 +31,19 @@ st.markdown(
     [data-testid="stToolbarActions"] *, [data-testid="stAppDeployButton"] *, [data-testid="stMainMenu"] * {{
         color: #FFFFFF !important;
     }}
+    @media (max-width: 1100px) {{ [data-testid="stHeader"]::after {{ display: none; }} }}
     @media (max-width: 760px) {{ [data-testid="stHeader"]::before {{ display: none; }} }}
+
+    /* Drug page: large, centered drug and condition pickers */
+    .st-key-pick_drug [data-testid="stWidgetLabel"] p, .st-key-pick_condition [data-testid="stWidgetLabel"] p {{
+        font-size: 1.05rem; font-weight: 600;
+    }}
+    .st-key-pick_drug [data-testid="stSelectbox"] div:has(> input),
+    .st-key-pick_condition [data-testid="stSelectbox"] div:has(> input) {{
+        min-height: 56px; border-color: #8FA3C0 !important;
+    }}
+    .st-key-pick_drug [data-testid="stSelectbox"] div:has(> input) *,
+    .st-key-pick_condition [data-testid="stSelectbox"] div:has(> input) * {{ font-size: 1.15rem; }}
 
     /* Body: very light grey, with white cards */
     [data-testid="stMainBlockContainer"] {{ padding-top: 96px; padding-bottom: 0 !important; }}
@@ -39,6 +56,10 @@ st.markdown(
     [data-testid="stMain"] {{ overflow-x: hidden; }}
 
     /* Footer: full-width navy band at the end of every page */
+    [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] .dimex-footer) {{
+        min-height: calc(100vh - 96px);      /* short pages: push the footer to the bottom */
+    }}
+    [data-testid="stElementContainer"]:has(.dimex-footer) {{ margin-top: auto; }}
     .dimex-footer {{
         background: {NAVY}; color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; line-height: 1.6;
         width: 100vw; margin: 56px 0 0 calc(50% - 50vw);
@@ -58,7 +79,6 @@ pages = st.navigation(
         st.Page("views/drug.py", title="Drugs", icon=":material/medication:", default=True),
         st.Page("views/review.py", title="Review detail", icon=":material/article:"),
         st.Page("views/demo.py", title="Try a review", icon=":material/edit_note:"),
-        st.Page("views/model_check.py", title="Model check", icon=":material/fact_check:"),
     ],
     position="top",
 )

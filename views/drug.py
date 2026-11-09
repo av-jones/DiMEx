@@ -2,22 +2,27 @@ import streamlit as st
 
 from core.data import summarize
 from core.labels import chip
-from core.registry import MODEL_NAMES, is_real
-from core.ui import card, fake_data_banner, highlight, load_predictions
+from core.registry import APP_MODEL
+from core.ui import card, highlight, load_predictions
 from core.viz import MUTED, legend, stacked, va_map
 
 TILES = [("effectiveness", "Effectiveness", "How well it worked, from review text"),
          ("side_effect", "Side effects", "How bad, from review text (higher = worse)"),
          ("satisfaction", "Satisfaction", "The model's estimate from review text")]
-MODEL_ORDER = sorted(MODEL_NAMES, key=lambda m: not is_real(m))
 
 preds = load_predictions()
-fake_data_banner()
+model = APP_MODEL
 
-c1, c2, c3 = st.columns(3)
-drug = c1.selectbox("Drug", sorted(preds.drug.unique()))
-condition = c2.selectbox("Condition", sorted(preds[preds.drug == drug].condition.unique()))
-model = c3.selectbox("Model", [m for m in MODEL_ORDER if m in set(preds.model)], key="model")
+# Large, centered pickers (styled by their keys in app.py)
+_, mid, _ = st.columns([1, 4, 1])
+with mid:
+    st.markdown("<h3 style='text-align:center;margin-bottom:0'>Find patient experiences for a drug</h3>",
+                unsafe_allow_html=True)
+    c1, c2 = st.columns(2, gap="medium")
+    drug = c1.selectbox("Drug name", sorted(preds.drug.unique()), key="pick_drug")
+    condition = c2.selectbox("Condition", sorted(preds[preds.drug == drug].condition.unique()),
+                             key="pick_condition")
+st.divider()
 
 s = summarize(preds, drug, condition, model)
 st.caption("PATIENT-REPORTED EXPERIENCES")

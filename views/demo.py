@@ -3,8 +3,8 @@ import streamlit as st
 
 from core.explain import intensity_band, key_sentences, summary_sentence, why
 from core.labels import chip
-from core.registry import MODEL_NAMES, is_real
-from core.ui import card, fake_data_banner, load_predictor
+from core.registry import APP_MODEL
+from core.ui import card, load_predictor
 from core.viz import ASPECT_COLORS, MUTED, intensity_meter, score_bar, va_map
 
 EXAMPLES = {
@@ -17,9 +17,6 @@ EXAMPLES = {
                     "Severe insomnia, I was wide awake every night.",
 }
 SHORT = {"effectiveness": "Effectiveness", "side_effect": "Side effects", "satisfaction": "Satisfaction"}
-
-# Trained models first, so the default choice is a real one when available.
-MODEL_ORDER = sorted(MODEL_NAMES, key=lambda m: not is_real(m))
 
 st.title("Try a review")
 st.write("Paste a drug review. DiMEx scores how well the drug worked, how bad the side effects were and "
@@ -40,8 +37,6 @@ with left:
                             placeholder="Describe how the medication worked and any side effects")
         stars = st.number_input("Patient's star rating, if any (1–10)", min_value=1, max_value=10,
                                 value=None, step=1, placeholder="Optional")
-        model = st.selectbox("Model", MODEL_ORDER, key="demo_model",
-                             format_func=lambda m: m if is_real(m) else f"{m} (not trained yet)")
         run = st.button("Analyze review", type="primary", width="stretch")
 
 with right:
@@ -53,9 +48,8 @@ with right:
             st.caption("You'll get a one-sentence summary, a score and an intensity reading for each "
                        "aspect, and a map of where the review lands on valence and arousal.")
     else:
-        fake_data_banner(model)
-        with st.spinner(f"Scoring with {model}..."):
-            predictor = load_predictor(model)
+        with st.spinner("Analyzing the review..."):
+            predictor = load_predictor(APP_MODEL)
             results = predictor.score_review(text)
             keys = key_sentences(predictor, text)
 

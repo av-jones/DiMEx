@@ -13,7 +13,7 @@ import pandas as pd
 
 from core.explain import intensity_band
 from core.labels import rating_label, typical_severity, va_to_rating
-from core.registry import MODEL_NAMES, Predictor
+from core.registry import APP_MODEL, MODEL_NAMES, Predictor
 
 SIDE_EFFECT_PRESENT = 1.6   # whole-review side-effect score (1-5) at which side effects count as reported
 PRED_PATH = Path(__file__).resolve().parent.parent / "data" / "predictions.parquet"
@@ -70,9 +70,11 @@ def batch_score(reviews, model_names=MODEL_NAMES):
 
 
 def load_predictions():
+    """Predictions from the app's model: data/predictions.parquet if it exists, else placeholders."""
     if PRED_PATH.exists():
-        return pd.read_parquet(PRED_PATH)
-    return batch_score(fake_reviews())
+        df = pd.read_parquet(PRED_PATH)
+        return df[df.model == APP_MODEL] if APP_MODEL in set(df.model) else df
+    return batch_score(fake_reviews(), [APP_MODEL])
 
 
 def _bands(arousal):

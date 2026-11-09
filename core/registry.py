@@ -34,6 +34,10 @@ def is_real(name):
     return MODELS[name]["ckpt"] is not None
 
 
+# The one model the app uses: the first trained model above, or RoBERTa until one is connected.
+APP_MODEL = next((m for m in MODEL_NAMES if is_real(m)), "RoBERTa")
+
+
 class AspectScorer:
     """A fine-tuned encoder with a 2-output regression head: (valence, arousal).
 

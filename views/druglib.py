@@ -28,20 +28,21 @@ df = df.assign(gap=gap(df))
 drug_n = df.drug.value_counts()
 left, right = st.columns(2, gap="medium")
 
-with left, card(stretch=True):
+# Both boxes are navy (styled by their keys in app.py)
+with left, st.container(border=True, key="dl_panel_close", height="stretch"):
     st.subheader("How close DiMEx gets")
     st.caption(f"Druglib test set · {len(df):,} reviews. Average gap = mean absolute error (MAE) on the "
                "patient's own scale; lower is better.")
     for r in m.itertuples():                       # one row per aspect: name, gap, detail
         a, b = st.columns([1, 1.25], vertical_alignment="center")
-        a.markdown(f"**{r.Aspect}**  \n<span style='color:{MUTED};font-size:13px'>scale {r.Scale}</span>",
+        a.markdown(f"**{r.Aspect}**  \n<span class='dl-muted' style='font-size:13px'>scale {r.Scale}</span>",
                    unsafe_allow_html=True)
         b.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:26px'>{r.MAE:.2f}</span> "
-                   f"<span style='color:{MUTED}'>average gap</span><br>"
-                   f"<span style='color:{MUTED};font-size:13px'>{r.within1:.0%} within 1 point · "
+                   f"<span class='dl-muted'>average gap</span><br>"
+                   f"<span class='dl-muted' style='font-size:13px'>{r.within1:.0%} within 1 point · "
                    f"kappa {r.Kappa:.2f}</span>", unsafe_allow_html=True)
 
-with right, card(stretch=True):
+with right, st.container(border=True, key="dl_panel_browse", height="stretch"):
     st.subheader("Browse reviews")
     f1, f2 = st.columns(2)
     drug = f1.selectbox("Drug", list(drug_n.index), index=None, placeholder=f"All {len(drug_n):,} drugs",
@@ -56,7 +57,7 @@ with right, card(stretch=True):
     order = st.selectbox("Order", ["Biggest disagreement", "Closest match", "Drug name"], key="dl_order")
     sub = (sub.sort_values("gap", ascending=False) if order == "Biggest disagreement"
            else sub.sort_values("gap") if order == "Closest match" else sub.sort_values(["drug", "review_id"]))
-    st.markdown(f"<div style='font-size:13px;color:{MUTED}'>{len(sub):,} reviews · {COMPARE_KEY}</div>",
+    st.markdown(f"<div class='dl-muted' style='font-size:13px'>{len(sub):,} reviews · {COMPARE_KEY}</div>",
                 unsafe_allow_html=True)
 
 key = (drug, condition, order)

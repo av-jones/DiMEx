@@ -118,6 +118,16 @@ st.markdown(
     /* Charts sit on white cards, so draw them on white (Streamlit paints them the page grey) */
     [data-testid="stVegaLiteChart"] svg.marks {{ background-color: #FFFFFF !important; }}
     /* Druglib page: each part of a review is a full-width section */
+    /* Druglib page: the two summary boxes are navy, with white text (menus stay white) */
+    [class*="st-key-dl_panel_"] {{ background: {NAVY}; border-color: {NAVY} !important; }}
+    [class*="st-key-dl_panel_"] h3, [class*="st-key-dl_panel_"] p, [class*="st-key-dl_panel_"] strong,
+    [class*="st-key-dl_panel_"] [data-testid="stWidgetLabel"] p, [class*="st-key-dl_panel_"] .dl-muted *:not(svg *) {{
+        color: #FFFFFF !important; }}
+    [class*="st-key-dl_panel_"] [data-testid="stCaptionContainer"] p,
+    [class*="st-key-dl_panel_"] .dl-muted {{ color: rgba(255, 255, 255, 0.75) !important; }}
+    [class*="st-key-dl_panel_"] [data-testid="stSelectbox"] div:has(> input) {{ border-color: #FFFFFF !important; }}
+    [class*="st-key-dl_panel_"] .dl-muted span[style*="border-radius:50%"] {{ border-color: #8FB4F0 !important; }}
+    [class*="st-key-dl_panel_"] [data-testid="stCaptionContainer"] p {{ color: rgba(255, 255, 255, 0.8) !important; }}
     .dl-part {{ display: grid; grid-template-columns: 2fr 1fr; gap: 8px 40px; align-items: center;
                 padding: 14px 0 10px; border-top: 1px solid #E3E8EF; }}
     .dl-compare {{ min-width: 0; }}

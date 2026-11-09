@@ -319,3 +319,26 @@ def stars_vs_model(points, height=280):
             .configure_view(stroke=LINE, fill="#F7F9FC")
             .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400,
                             labelFontSize=11, titleFontSize=11))
+
+
+def calibration_chart(by_level, scale, height=300):
+    """For each rating the patient gave (x): DiMEx's average prediction (dot) and its middle half (bar),
+    against a dashed 'perfect agreement' line. Dots on the line = right on average."""
+    x = alt.X("level:Q", title="Patient's rating", scale=alt.Scale(domain=[0.5, scale + 0.5]),
+              axis=alt.Axis(values=list(range(1, scale + 1)), format="d", grid=False))
+    y_scale = alt.Scale(domain=[1, scale])
+    diag = alt.Chart(pd.DataFrame({"level": [1, scale], "mean_pred": [1, scale]})).mark_line(
+        strokeDash=[5, 4], color="#A3AEBE").encode(x="level:Q", y=alt.Y("mean_pred:Q", scale=y_scale))
+    spread = alt.Chart(by_level).mark_rule(strokeWidth=6, color="#BFD3F2", strokeCap="round").encode(
+        x=x, y=alt.Y("q25:Q", scale=y_scale), y2="q75:Q")
+    tip = [alt.Tooltip("label:N", title="Patient said"), alt.Tooltip("n:Q", title="Reviews"),
+           alt.Tooltip("mean_pred:Q", title="DiMEx average", format=".1f"),
+           alt.Tooltip("mae:Q", title="Average gap", format=".2f")]
+    dots = alt.Chart(by_level).mark_circle(size=140, color=POS, opacity=1, stroke="white", strokeWidth=1.5).encode(
+        x=x, y=alt.Y("mean_pred:Q", scale=y_scale, title="DiMEx's prediction",
+                     axis=alt.Axis(values=list(range(1, scale + 1)), format="d", grid=True, gridColor="#EEF1F5")),
+        tooltip=tip)
+    return (alt.layer(diag, spread, dots).properties(height=height)
+            .configure_view(stroke=None).configure(background="#FFFFFF")
+            .configure_axis(labelColor=AXIS_INK, titleColor=AXIS_INK, domain=False, ticks=False,
+                            titleFontWeight=400, labelFontSize=12, titleFontSize=13))

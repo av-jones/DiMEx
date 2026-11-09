@@ -3,10 +3,10 @@ import html
 
 import streamlit as st
 
-from core.druglib import ASPECTS, LEVEL_NAMES, gap, metrics
+from core.druglib import ASPECTS, LEVEL_NAMES, gap, interpret, metrics
 from core.labels import chip
 from core.ui import card, load_druglib, scroll_to
-from core.viz import COMPARE_KEY, MUTED, accuracy_grid, compare_bar
+from core.viz import COMPARE_KEY, MUTED, accuracy_grid, calibration_chart, compare_bar
 
 PAGE = 8          # reviews shown per "Show more"
 
@@ -52,6 +52,26 @@ with right, st.container(border=True, key="dl_panel_browse", height="stretch"):
            else sub.sort_values("gap") if order == "Closest match" else sub.sort_values(["drug", "review_id"]))
     st.markdown(f"<div class='dl-muted' style='font-size:13px'>{len(sub):,} reviews · {COMPARE_KEY}</div>",
                 unsafe_allow_html=True)
+
+# ---------------------------------------------------------------- what the results mean
+with card():
+    head, pick = st.columns([1.4, 1], vertical_alignment="center")
+    head.subheader("What the results mean")
+    names = {k: name for k, _, name, _, _ in ASPECTS}
+    aspect = pick.segmented_control("Aspect", list(names), format_func=names.get, default="eff",
+                                    key="dl_aspect", label_visibility="collapsed", required=True)
+    info = interpret(df, aspect)
+    words, chart = st.columns([1, 1.15], gap="large")
+    with words:
+        for point in info["points"]:
+            st.markdown(f"- {point}")
+        if source != "trained":
+            st.caption("Based on placeholder predictions; this reading updates once the trained model is connected.")
+    with chart:
+        st.caption("Each dot: DiMEx's average prediction for reviews the patient rated at that level. "
+                   "The pale bar shows where the middle half of its predictions fall. "
+                   "Dots on the dashed line mean DiMEx matches patients on average.")
+        st.altair_chart(calibration_chart(info["by_level"], info["scale"]), width="stretch")
 
 key = (drug, condition, order)
 if st.session_state.get("dl_key") != key:          # new filter: start from the top

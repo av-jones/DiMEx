@@ -33,8 +33,7 @@ PRED_FILE = "druglib_predictions.parquet"
 ASPECTS = [("eff", "benefits", "Effectiveness", "effectiveness", 5),
            ("side", "side_effects", "Side effects", "side_effect", 5),
            ("sat", "comment", "Satisfaction", "satisfaction", 10)]
-LEVEL_NAMES = {"eff": {v: k.replace(" Effective", "").replace("Ineffective", "Not effective")
-                       for k, v in EFFECT_LEVELS.items()},
+LEVEL_NAMES = {"eff": {v: k.replace("Ineffective", "Not effective").capitalize() for k, v in EFFECT_LEVELS.items()},
                "side": {v: k.replace(" Side Effects", "").replace("No", "None") for k, v in SIDE_LEVELS.items()}}
 
 
@@ -165,3 +164,57 @@ def gap(df):
     """Each review's average distance from the patient, as a share of each scale (0 = exact)."""
     parts = [(df[f"pred_{k}"] - df[f"gold_{k}"]).abs() / (s - 1) for k, _, _, _, s in ASPECTS]
     return pd.concat(parts, axis=1).mean(axis=1)
+
+
+# ---------------------------------------------------------------- interpretation
+
+def _kappa_words(k):
+    """Landis & Koch (1977) bands for Cohen's kappa."""
+    return ("no better than chance" if k <= 0 else "slight" if k < 0.2 else "fair" if k < 0.4
+            else "moderate" if k < 0.6 else "substantial" if k < 0.8 else "almost perfect")
+
+
+def interpret(df, key):
+    """Plain-language reading of one aspect's results, plus the numbers behind it.
+    Returns {"points": [...sentences], "by_level": DataFrame(level, label, n, mean_pred, q25, q75, mae)}."""
+    _, _, name, kind, scale = next(a for a in ASPECTS if a[0] == key)
+    d = df[[f"gold_{key}", f"pred_{key}"]].dropna()
+    g, p = d[f"gold_{key}"].astype(float), d[f"pred_{key}"].astype(float)
+    err = p - g
+    mae, within1, bias = err.abs().mean(), (err.abs() <= 1).mean(), err.mean()
+    k = _kappa(three_class(key, g), three_class(key, p))
+
+    levels = sorted(g.round().unique())
+    rows = []
+    for lv in levels:
+        sel = p[g.round() == lv]
+        rows.append({"level": int(lv), "label": LEVEL_NAMES.get(key, {}).get(int(lv), str(int(lv))), "n": len(sel),
+                     "mean_pred": sel.mean(), "q25": sel.quantile(.25), "q75": sel.quantile(.75),
+                     "mae": (sel - lv).abs().mean()})
+    by_level = pd.DataFrame(rows)
+
+    pts = [f"On average DiMEx is off by **{mae:.2f} points** on this 1–{scale} scale, and "
+           f"**{within1:.0%}** of its predictions land within 1 point of what the patient said."]
+    # direction of the misses
+    if abs(bias) < 0.25:
+        pts.append("It has **no consistent lean**: it is about as likely to rate too high as too low.")
+    else:
+        up = bias > 0
+        what = {"effectiveness": ("more effective", "less effective"),
+                "side_effect": ("more severe", "milder"),
+                "satisfaction": ("more satisfied", "less satisfied")}[kind]
+        pts.append(f"It **leans {'high' if up else 'low'}**: on average it reads reviews as "
+                   f"**{what[0] if up else what[1]}** than patients rated them (by {abs(bias):.1f} points).")
+    # where it struggles
+    reliable = by_level[by_level.n >= 3]
+    if len(reliable) >= 2:
+        worst, best = reliable.loc[reliable.mae.idxmax()], reliable.loc[reliable.mae.idxmin()]
+        pts.append(f"It is **most accurate** when patients rated **{best.label}** (off by {best.mae:.1f}) and "
+                   f"**least accurate** when they rated **{worst.label}** (off by {worst.mae:.1f}).")
+        spread = reliable.mean_pred.max() - reliable.mean_pred.min()
+        if spread < (scale - 1) * 0.25:
+            pts.append("Its predictions **barely change with the patient's rating**: low and high ratings get "
+                       "similar scores, so it separates good from bad experiences only weakly.")
+    pts.append(f"On low / middle / high ratings its agreement with patients is **{_kappa_words(k)}** "
+               f"(κ = {k:.2f}).")
+    return {"points": pts, "by_level": by_level, "scale": scale, "name": name}

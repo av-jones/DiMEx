@@ -6,7 +6,7 @@ import streamlit as st
 from core.druglib import ASPECTS, LEVEL_NAMES, gap, metrics
 from core.labels import chip
 from core.ui import card, load_druglib, scroll_to
-from core.aspects import find_terms
+from core.aspects import find_terms, serious_mentions
 from core.viz import ASPECT_KEY, COMPARE_KEY, MUTED, accuracy_grid, compare_bar, mark_terms
 
 PAGE = 8          # reviews shown per "Show more"
@@ -76,7 +76,10 @@ for r in sub.head(shown).itertuples():
         head, tag = st.columns([3, 1.2], vertical_alignment="center")
         head.markdown(f"**{html.escape(r.drug)}** <span style='color:{MUTED}'>· {html.escape(r.condition)} "
                       f"· review #{r.review_id}</span>", unsafe_allow_html=True)
-        tag.markdown(f"<div style='text-align:right'>{chip(gap_label(r.gap))}</div>", unsafe_allow_html=True)
+        serious = serious_mentions(" ".join([r.benefits, r.side_effects, r.comment]))
+        flag = (f"<span class='serious-flag' title='Mentions: {html.escape(', '.join(sorted(set(serious))))}'>"
+                "⚠ Serious event mentioned</span> ") if serious else ""
+        tag.markdown(f"<div style='text-align:right'>{flag}{chip(gap_label(r.gap))}</div>", unsafe_allow_html=True)
         # One full-width section per part of the review: what they wrote, then patient vs. DiMEx
         for i, (k, text_col, name, _, scale) in enumerate(ASPECTS):
             gold, pred, text = getattr(r, f"gold_{k}"), getattr(r, f"pred_{k}"), getattr(r, text_col)

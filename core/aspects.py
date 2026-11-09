@@ -15,7 +15,23 @@ SIDE_EFFECTS = {
     "Weight gain": ["weight gain", "gained"],
     "Dizziness": ["dizzy", "dizziness", "lightheaded"],
     "Sexual side effects": ["libido", "sex drive", "sexual"],
+    # Mood and behavior: common, and among the most serious for psychiatric drugs
+    "Agitation or anger": ["agitat", "angry", "anger", "irritab", "rage", "aggressi", "hostile"],
+    "Anxiety or panic": ["anxious", "panic attack", "jittery", "restless"],
+    "Low mood": ["depressed", "hopeless", "worse depression", "crying"],
+    "Suicidal thoughts": ["suicid", "kill myself", "end my life", "self-harm", "self harm", "hurt myself"],
 }
+
+# Mentions that should flag a review as describing a serious event, whatever its scores say
+SERIOUS_TERMS = ["suicid", "kill myself", "end my life", "self-harm", "self harm", "hurt myself", "overdose",
+                 "seizure", "hospital", "emergency room", "anaphyla", "stroke", "heart attack", "psychosis",
+                 "hallucinat"]
+
+
+def serious_mentions(text):
+    """The serious-event terms a text mentions (lower-cased matches), e.g. ['suicide']."""
+    low = (text or "").lower()
+    return [m.group(0) for t in SERIOUS_TERMS for m in re.finditer(r"\b" + re.escape(t) + r"\w*", low)]
 
 EFFECT_CUES = ["work", "help", "stopped my", "better", "improv", "lifted", "edge off",
                "no change", "no difference", "finally"]

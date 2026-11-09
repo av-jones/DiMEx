@@ -76,7 +76,9 @@ class AspectScorer:
 
 # ---- fake scorer: keyword rules, used until real checkpoints exist ----
 _STRONG = ["severe", "terrible", "unbearable", "awful", "horrible", "worst", "couldn't",
-           "nothing at all", "not worth", "exhausted", "barely"]
+           "nothing at all", "not worth", "exhausted", "barely",
+           "suicid", "kill myself", "self-harm", "agitat", "angry", "rage", "seizure", "hospital",
+           "emergency room", "panic attack", "hallucinat"]
 _MILD = ["mild", "slight", "a little", "faded", "went away", "first week", "first two weeks"]
 _GOOD = ["stopped my", "lifted", "better", "helped", "works", "worked", "finally"]
 _NONE = ["no change", "didn't help", "did not help", "no difference", "didn't work", "no effect"]

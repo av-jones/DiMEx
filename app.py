@@ -166,6 +166,8 @@ st.markdown(
     .acc-name span {{ display: block; font-weight: 400; font-size: 12px; color: rgba(255, 255, 255, 0.65); }}
     .acc-val {{ font-family: "IBM Plex Mono", monospace; font-size: 22px; color: #FFFFFF; cursor: default; }}
     @media (max-width: 760px) {{ .acc-grid {{ grid-template-columns: 1fr; gap: 6px; }} .acc-h {{ display: none; }} }}
+    .serious-flag {{ display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 600;
+                     color: #8A1F1F; background: #FBE3E3; border: 1px solid #E8A9A9; margin-right: 6px; white-space: nowrap; }}
     .aspect-term {{ padding: 0 3px; border-radius: 4px; cursor: help; }}
     [class*="st-key-dl_panel_"] .dl-muted .aspect-term {{ color: #1B2430 !important; }}
     .dl-part {{ display: grid; grid-template-columns: 2fr 1fr; gap: 8px 40px; align-items: center;

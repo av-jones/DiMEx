@@ -7,6 +7,11 @@ from core.ui import card
 st.title("Model card")
 st.caption("What the DiMEx model is, how it was trained and tested, and what it shouldn't be used for")
 
+with card():
+    st.subheader("Authors")
+    st.markdown("**Tejaswi V., Athlene V. Jones, Joseph O'Berry**  \n"
+                "University of North Florida, Jacksonville, Florida, USA")
+
 if not is_real(APP_MODEL):
     st.info("This copy of the app is running on placeholder scores while the trained checkpoint is connected. "
             "The results below are from the training runs.")

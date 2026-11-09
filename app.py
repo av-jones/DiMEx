@@ -113,6 +113,9 @@ st.markdown(
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
     .band-greeting {{ text-align: center; color: rgba(255, 255, 255, 0.82); font-size: 1rem; font-weight: 500;
                       letter-spacing: .01em; margin-bottom: 2px; }}
+    .big-head {{ font-size: 1.85rem !important; margin: 0 0 4px !important; padding: 0 !important; }}
+    .big-note, .big-note * {{ font-size: 1.2rem !important; line-height: 1.6 !important; color: #3A4352; }}
+    .big-note {{ margin: 0 0 8px !important; }}
     .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}
     .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
     /* "Search by" switch and the popular-condition shortcuts, light on the blue band */

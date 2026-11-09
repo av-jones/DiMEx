@@ -149,7 +149,7 @@ def legend():
     items = "".join(f'<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">'
                     f'<span style="width:10px;height:10px;border-radius:3px;background:{BAND_COLORS[b]}"></span>{b}</span>'
                     for b in ("Mild", "Moderate", "Distressing"))
-    return f'<div style="font-size:13px;color:{MUTED}">{items}</div>'
+    return f'<div style="font-size:{size}px;color:{MUTED}">{items}</div>'
 
 
 _CORNERS = pd.DataFrame([
@@ -164,10 +164,12 @@ SIDE_GROUPS = (["Mild", "Moderate", "Distressing"], [MILD, MOD, DIST], "Intensit
 EFFECT_GROUPS = (["Effective", "Moderate", "Not effective"], [POS, NEU, NEG], "Effectiveness")
 
 
-def va_map(points=None, dots=None, height=330, groups=SIDE_GROUPS):
+def va_map(points=None, dots=None, height=330, groups=SIDE_GROUPS, big=False):
     """Valence (x) by arousal (y), 1-9, with plain-language corners.
     points: DataFrame v, a, label, color (labeled markers).
-    dots: DataFrame v, a and a "band" or "group" column, colored by groups = (names, colors, title)."""
+    dots: DataFrame v, a and a "band" or "group" column, colored by groups = (names, colors, title).
+    big=True: larger text and dots, for a full-width chart."""
+    corner_px, dot_size = (14, 170) if big else (11, 120)
     x = alt.X("v:Q", scale=alt.Scale(domain=[1, 9]), title="Valence: negative → positive",
               axis=alt.Axis(values=[1, 3, 5, 7, 9], format="d", grid=False))
     y = alt.Y("a:Q", scale=alt.Scale(domain=[1, 9]), title="Arousal: calm → intense",
@@ -179,10 +181,10 @@ def va_map(points=None, dots=None, height=330, groups=SIDE_GROUPS):
     ]
     for align in ("left", "right"):
         layers.append(alt.Chart(_CORNERS[_CORNERS["align"] == align])
-                      .mark_text(align=align, fontSize=11, color=MUTED).encode(x=x, y=y, text="t:N"))
+                      .mark_text(align=align, fontSize=corner_px, color=MUTED).encode(x=x, y=y, text="t:N"))
     if dots is not None and len(dots):
         col = "band" if "band" in dots else "group"
-        layers.append(alt.Chart(dots).mark_circle(size=120, opacity=0.4).encode(
+        layers.append(alt.Chart(dots).mark_circle(size=dot_size, opacity=0.4).encode(
             x=x, y=y,
             color=alt.Color(f"{col}:N", scale=alt.Scale(domain=groups[0], range=groups[1]), legend=None),
             tooltip=[alt.Tooltip(f"{col}:N", title=groups[2]), alt.Tooltip("v:Q", title="Valence", format=".1f"),
@@ -197,15 +199,16 @@ def va_map(points=None, dots=None, height=330, groups=SIDE_GROUPS):
                                                   color=INK).encode(x=x, y=y, text="label:N"))
     return (alt.layer(*layers).properties(height=height)
             .configure_view(stroke=LINE, fill="#F7F9FC")
-            .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400))
+            .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400,
+                            labelFontSize=14 if big else 11, titleFontSize=15 if big else 11))
 
 
-def group_legend(groups):
+def group_legend(groups, size=13):
     names, colors, _ = groups
     items = "".join(f'<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">'
                     f'<span style="width:10px;height:10px;border-radius:3px;background:{c}"></span>{n}</span>'
                     for n, c in zip(names, colors))
-    return f'<div style="font-size:13px;color:{MUTED}">{items}</div>'
+    return f'<div style="font-size:{size}px;color:{MUTED}">{items}</div>'
 
 
 def share_bars(rows, color=POS):
@@ -237,4 +240,5 @@ def stars_vs_model(points, height=280):
                  alt.Tooltip("satisfaction:Q", title="Model estimate", format=".1f")])
     return (alt.layer(diag, dots).properties(height=height)
             .configure_view(stroke=LINE, fill="#F7F9FC")
-            .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400))
+            .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400,
+                            labelFontSize=14 if big else 11, titleFontSize=15 if big else 11))

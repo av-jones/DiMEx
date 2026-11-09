@@ -205,22 +205,13 @@ def show(drug, condition):
 
     # ---------------------------------------------------------------- effectiveness
     elif selected == "effectiveness" and "eff_dots" in s:
-        left, right = st.columns([1, 1.25], gap="large")
-        with left:
-            with card(stretch=True):
-                st.subheader("How strongly patients describe the benefit")
-                st.markdown(intensity_gauge(s["eff_intensity"], "effectiveness", size=230,
-                                            caption="Average intensity, from calm (“it helps a bit”) "
-                                                    "to strong (“it changed my life”)"),
-                            unsafe_allow_html=True)
-                st.caption("Intensity is how strongly a review expresses the effect, not whether the drug "
-                           "worked; the score and bars above show that.")
-        with right:
-            with card(stretch=True):
-                st.subheader("Where effectiveness reports land")
-                st.caption("Each dot is one review's effectiveness score")
-                st.altair_chart(va_map(dots=s["eff_dots"], height=300, groups=EFFECT_GROUPS), width="stretch")
-                st.markdown(group_legend(EFFECT_GROUPS), unsafe_allow_html=True)
+        with card():
+            st.markdown("<h2 class='big-head'>Where effectiveness reports land</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='big-note'>Each dot is one review. <b>Left to right</b>: how well the patient says "
+                        "it worked. <b>Bottom to top</b>: how strongly they say it, from calm (“it helps a bit”) "
+                        "to intense (“it changed my life”).</p>", unsafe_allow_html=True)
+            st.altair_chart(va_map(dots=s["eff_dots"], height=440, groups=EFFECT_GROUPS, big=True), width="stretch")
+            st.markdown(group_legend(EFFECT_GROUPS, size=16), unsafe_allow_html=True)
 
         with card():
             st.subheader("What patients say about how well it worked")

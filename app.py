@@ -127,19 +127,26 @@ st.markdown(
         background-color: {BAND}; width: 100vw !important; max-width: 100vw !important;
         margin: -24px 0 8px calc(50% - 50vw);
         padding: 28px max(32px, calc(50vw - 640px)) 32px;
-        position: relative; overflow: hidden;
-        /* Faint, slowly drifting waves (a nod to the valence-arousal curves) plus a soft moving glow */
+        position: relative; overflow: hidden; isolation: isolate;
+        /* A negative-to-positive spectrum (deep navy on the left to light blue on the right) with faint
+           waves drifting over it; a soft band of light sweeps across slowly (::before, behind the content) */
         background-image: url("{WAVES}"),
-            radial-gradient(ellipse 45% 70% at 20% 30%, rgba(255, 255, 255, 0.10), transparent 70%),
-            radial-gradient(ellipse 40% 60% at 80% 75%, rgba(140, 185, 255, 0.14), transparent 70%);
-        background-size: 1200px 220px, 200% 200%, 200% 200%;
-        background-repeat: repeat-x, no-repeat, no-repeat;
-        animation: dimexDrift 40s linear infinite, dimexGlow 18s ease-in-out infinite alternate;
+            linear-gradient(90deg, #17325F 0%, {BAND} 48%, #6C93CC 100%);
+        background-size: 1200px 220px, 100% 100%;
+        background-repeat: repeat-x, no-repeat;
+        animation: dimexDrift 40s linear infinite;
     }}
-    @keyframes dimexDrift {{ from {{ background-position: 0 center, 0% 0%, 100% 100%; }}
-                             to   {{ background-position: 1200px center, 0% 0%, 100% 100%; }} }}
-    @keyframes dimexGlow  {{ from {{ background-position: 0 center, 0% 0%, 100% 100%; }}
-                             to   {{ background-position: 600px center, 100% 60%, 0% 40%; }} }}
+    .st-key-picker_band::before {{
+        content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.11) 50%, transparent 100%)
+                    no-repeat;
+        background-size: 35% 100%; background-position: -60% 0;
+        animation: dimexSweep 14s ease-in-out infinite;
+    }}
+    @keyframes dimexDrift {{ from {{ background-position: 0 center, 0 0; }}
+                             to   {{ background-position: 1200px center, 0 0; }} }}
+    @keyframes dimexSweep {{ 0% {{ background-position: -60% 0; }} 70%, 100% {{ background-position: 160% 0; }} }}
+    @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band::before {{ animation: none; opacity: 0; }} }}
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
     .band-greeting {{ text-align: center; color: #FFD98A; font-size: 1.05rem; font-weight: 600;
                       letter-spacing: .01em; margin-bottom: 2px; }}

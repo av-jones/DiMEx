@@ -68,7 +68,9 @@ with st.container(key="picker_band"):
     with mid:
         name = viewer_name()
         st.markdown(f"<div class='band-greeting'>{html.escape(greeting() + (', ' + name if name else ''))}</div>"
-                    "<h3 style='text-align:center;margin:0'>See how a medication really felt to the people who took it</h3>",
+                    "<h3 style='text-align:center;margin:0'>See how a medication really felt to the people who took it</h3>"
+                    "<p class='band-sub'>DiMEx reads every review for how negative or positive the experience was, "
+                    "and how calm or intense, so you see more than a star rating.</p>",
                     unsafe_allow_html=True)
         with st.container(horizontal=True, horizontal_alignment="center", key="pick_mode_row"):
             st.segmented_control("Search by", ["Condition", "Drug"], key="pick_mode",

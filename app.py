@@ -168,6 +168,8 @@ st.markdown(
     .big-head {{ font-size: 1.85rem !important; margin: 0 0 4px !important; padding: 0 !important; }}
     .big-note, .big-note * {{ font-size: 1.2rem !important; line-height: 1.6 !important; color: #3A4352; }}
     .big-note {{ margin: 0 0 8px !important; }}
+    .band-sub {{ text-align: center; color: rgba(255, 255, 255, 0.88) !important; font-size: 1.05rem;
+                 max-width: 720px; margin: 6px auto 12px !important; line-height: 1.5; }}
     .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}
     .st-key-picker_band h3, .st-key-picker_band [data-testid="stWidgetLabel"] p {{ color: #FFFFFF !important; }}
     /* "Search by" switch and the popular-condition shortcuts, light on the blue band */

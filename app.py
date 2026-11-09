@@ -155,6 +155,22 @@ st.markdown(
     [class*="st-key-dl_panel_"] .dl-muted {{ color: rgba(255, 255, 255, 0.75) !important; }}
     [class*="st-key-dl_panel_"] [data-testid="stSelectbox"] div:has(> input) {{ border-color: #FFFFFF !important; }}
     [class*="st-key-dl_panel_"] [data-testid="stCaptionContainer"] p {{ color: rgba(255, 255, 255, 0.8) !important; }}
+    /* 'How close DiMEx gets' grid: aspect rows, three metric columns of thin labeled bars */
+    .acc-grid {{ display: grid; grid-template-columns: minmax(96px, 1.1fr) repeat(3, minmax(0, 1fr));
+                 gap: 16px 18px; align-items: center; margin: 4px 0 14px; }}
+    .acc-h {{ font-size: 13px; font-weight: 600;
+              color: rgba(255, 255, 255, 0.75); align-self: end; padding-bottom: 2px;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.18); }}
+    .acc-grid .acc-h:first-child {{ border-bottom-color: rgba(255, 255, 255, 0.18); }}
+    .acc-name {{ color: #FFFFFF; font-weight: 600; font-size: 15px; line-height: 1.25; }}
+    .acc-name span {{ display: block; font-weight: 400; font-size: 12px; color: rgba(255, 255, 255, 0.65); }}
+    .acc-cell {{ display: flex; align-items: center; gap: 8px; cursor: default; }}
+    .acc-track {{ flex: 1; height: 8px; background: rgba(255, 255, 255, 0.12); border-radius: 4px; overflow: hidden; }}
+    .acc-fill {{ height: 100%; background: #8FB4F0; border-radius: 0 4px 4px 0; }}
+    .acc-cell:hover .acc-fill {{ background: #B7D0F7; }}
+    .acc-val {{ font-family: "IBM Plex Mono", monospace; font-size: 14px; color: #FFFFFF; min-width: 38px;
+                text-align: right; }}
+    @media (max-width: 760px) {{ .acc-grid {{ grid-template-columns: 1fr; gap: 6px; }} .acc-h {{ display: none; }} }}
     .dl-part {{ display: grid; grid-template-columns: 2fr 1fr; gap: 8px 40px; align-items: center;
                 padding: 14px 0 10px; border-top: 1px solid #E3E8EF; }}
     .dl-compare {{ min-width: 0; }}

@@ -32,6 +32,32 @@ def dimex_icon(size=18):
             f'<circle cx="7.9" cy="16.1" r="2.3" fill="{NEG}"/></svg>')
 
 
+def accuracy_grid(rows):
+    """'How close' table for a navy panel: one row per aspect, three metrics as labeled bars.
+    rows: dicts with Aspect, Scale ("1–5"), scale_max, MAE, within1 (0-1), Kappa.
+    Bars use one light-blue hue; the value is printed beside each bar and the arrow in the header says
+    which way is better. Each bar has a hover tooltip."""
+    def bar(frac, label, tip):
+        w = max(0.0, min(1.0, frac)) * 100
+        return (f'<div class="acc-cell" title="{tip}"><div class="acc-track">'
+                f'<div class="acc-fill" style="width:{w:.0f}%"></div></div>'
+                f'<span class="acc-val">{label}</span></div>')
+    head = ('<div class="acc-grid"><div class="acc-h"></div>'
+            '<div class="acc-h">Average gap (MAE) ↓</div><div class="acc-h">Within 1 point ↑</div>'
+            '<div class="acc-h">Agreement (κ) ↑</div>')
+    body = ""
+    for r in rows:
+        span = r["scale_max"] - 1
+        body += (f'<div class="acc-name">{r["Aspect"]}<span>scale {r["Scale"]}</span></div>'
+                 + bar(r["MAE"] / span, f'{r["MAE"]:.2f}',
+                       f'Off by {r["MAE"]:.2f} rating points on average, out of a possible {span}')
+                 + bar(r["within1"], f'{r["within1"]:.0%}',
+                       f'{r["within1"]:.0%} of predictions are within 1 point of the patient')
+                 + bar(r["Kappa"], f'{r["Kappa"]:.2f}',
+                       f"Cohen's kappa on low/mid/high classes: 0 = chance agreement, 1 = perfect"))
+    return head + body + "</div>"
+
+
 def compare_bar(patient, model, scale):
     """The patient's rating and the model's prediction as two markers on one 1..scale track,
     joined by a line whose length is the disagreement. Patient = person icon, model = the DiMEx mark."""

@@ -6,7 +6,7 @@ import streamlit as st
 from core.druglib import ASPECTS, LEVEL_NAMES, gap, metrics
 from core.labels import chip
 from core.ui import card, load_druglib, scroll_to
-from core.viz import COMPARE_KEY, MUTED, compare_bar
+from core.viz import COMPARE_KEY, MUTED, accuracy_grid, compare_bar
 
 PAGE = 8          # reviews shown per "Show more"
 
@@ -31,16 +31,10 @@ left, right = st.columns(2, gap="medium")
 # Both boxes are navy (styled by their keys in app.py)
 with left, st.container(border=True, key="dl_panel_close", height="stretch"):
     st.subheader("How close DiMEx gets")
-    st.caption(f"Druglib test set · {len(df):,} reviews. Average gap = mean absolute error (MAE): how many "
-               "rating points DiMEx is off from the patient, on average. Lower is better.")
-    for r in m.itertuples():                       # one row per aspect: name, gap, detail
-        a, b = st.columns([1, 1.25], vertical_alignment="center")
-        a.markdown(f"**{r.Aspect}**  \n<span class='dl-muted' style='font-size:13px'>scale {r.Scale}</span>",
-                   unsafe_allow_html=True)
-        b.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:26px'>{r.MAE:.2f}</span> "
-                   f"<span class='dl-muted'>average gap</span><br>"
-                   f"<span class='dl-muted' style='font-size:13px'>{r.within1:.0%} within 1 point · "
-                   f"kappa {r.Kappa:.2f}</span>", unsafe_allow_html=True)
+    st.caption(f"Druglib test set · {len(df):,} reviews, each compared with the patient's own ratings. "
+               "Arrows show which way is better; hover a bar for details.")
+    rows = [{**r, "scale_max": int(r["Scale"].split("–")[1])} for r in m.to_dict("records")]
+    st.markdown(accuracy_grid(rows), unsafe_allow_html=True)
 
 with right, st.container(border=True, key="dl_panel_browse", height="stretch"):
     st.subheader("Browse reviews")

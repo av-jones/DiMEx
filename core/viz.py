@@ -56,20 +56,44 @@ def star_rating(value, scale, kind, size=22):
 </div>"""
 
 
-def intensity_meter(arousal):
-    """Nine segments, filled up to the arousal score; light to dark as intensity rises."""
-    segs = []
-    for i in range(1, 10):
-        color = MILD if i <= 3 else MOD if i <= 6 else DIST
-        segs.append(f'<span style="flex:1;height:10px;border-radius:2px;'
-                    f'background:{color if i <= round(arousal) else SOFT}"></span>')
-    return f"""
-<div role="img" aria-label="Intensity {arousal:.1f} out of 9" style="margin:4px 0 2px">
-  <div style="display:flex;gap:3px">{''.join(segs)}</div>
-  <div style="display:flex;justify-content:space-between;font-size:11px;color:{MUTED};margin-top:4px">
-    <span>Calm</span><span>Intense</span></div>
-</div>"""
+def intensity_gauge(arousal, kind="side_effect", size=200, caption=None):
+    """A half-circle gauge for intensity (arousal, 1-9): a needle over three bands, calm to intense.
+    Band edges match the intensity words (core.explain.INTENSITY_CUTS)."""
+    import math
+    from core.explain import INTENSITY_CUTS, intensity_band
+    cx, cy, r, w = 100, 100, 78, 16
 
+    def pt(value, radius):                    # 1 -> far left, 9 -> far right, over the top
+        ang = math.pi * (1 - (value - 1) / 8)
+        return cx + radius * math.cos(ang), cy - radius * math.sin(ang)
+
+    def arc(v0, v1, color):
+        (x0, y0), (x1, y1) = pt(v0, r), pt(v1, r)
+        return (f'<path d="M {x0:.1f} {y0:.1f} A {r} {r} 0 0 1 {x1:.1f} {y1:.1f}" fill="none" '
+                f'stroke="{color}" stroke-width="{w}"/>')
+
+    a = max(1.0, min(9.0, float(arousal)))
+    (nx, ny) = pt(a, r - 22)
+    edges = [1, *INTENSITY_CUTS, 9]
+    bands = "".join(arc(edges[i] + (0.04 if i else 0), edges[i + 1] - (0.04 if i < 2 else 0), c)
+                    for i, c in enumerate((MILD, MOD, DIST)))
+    word = intensity_band(a, kind)
+    low = "Mild" if kind == "side_effect" else "Calm"
+    caption_html = (f'<div style="font-size:12px;color:{MUTED};text-align:center;margin-top:2px">{caption}</div>'
+                    if caption else "")
+    return f"""
+<div style="display:flex;flex-direction:column;align-items:center">
+<svg viewBox="0 0 200 128" width="{size}" role="img" aria-label="Intensity {a:.1f} out of 9: {word}">
+  {bands}
+  <line x1="{cx}" y1="{cy}" x2="{nx:.1f}" y2="{ny:.1f}" stroke="{INK}" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="{cx}" cy="{cy}" r="7" fill="{INK}"/>
+  <text x="14" y="122" font-size="11" fill="{MUTED}" font-family="sans-serif">{low}</text>
+  <text x="186" y="122" font-size="11" fill="{MUTED}" text-anchor="end" font-family="sans-serif">Intense</text>
+</svg>
+<div style="font-size:17px;font-weight:600;color:{INK};margin-top:-4px">{word}
+  <span style="font-size:12px;font-weight:400;color:{MUTED};font-family:'IBM Plex Mono',monospace">{a:.1f}/9</span></div>
+{caption_html}
+</div>"""
 
 def stacked(shares, height=14):
     """shares: dict band -> fraction, in the order Mild, Moderate, Distressing."""

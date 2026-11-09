@@ -4,7 +4,7 @@ from core.data import summarize
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.ui import card, highlight, load_predictions
-from core.viz import MUTED, legend, stacked, star_rating, va_map
+from core.viz import MUTED, intensity_gauge, legend, stacked, star_rating, va_map
 
 TILES = [("effectiveness", "Effectiveness", "How well it worked, from review text"),
          ("side_effect", "Side effects", "How bad, from review text (higher = worse)"),
@@ -53,11 +53,16 @@ with main:
     if s["intensity"]:
         with card():
             st.subheader("How intense are the side effects?")
-            st.caption("Share of reviews reporting side effects, by how intensely they describe them")
-            st.markdown(stacked(s["intensity"], height=18), unsafe_allow_html=True)
-            cols = st.columns(3)
-            for col, band in zip(cols, ("Mild", "Moderate", "Distressing")):
-                col.metric(band, f"{s['intensity'][band]:.0%}")
+            gauge_col, split_col = st.columns([1, 1.7], gap="large", vertical_alignment="center")
+            gauge_col.markdown(intensity_gauge(s["dots"].a.mean(), "side_effect", size=210,
+                                               caption="Average intensity, calm to intense"),
+                               unsafe_allow_html=True)
+            with split_col:
+                st.caption("Share of reviews reporting side effects, by how intensely they describe them")
+                st.markdown(stacked(s["intensity"], height=18), unsafe_allow_html=True)
+                cols = st.columns(3)
+                for col, band in zip(cols, ("Mild", "Moderate", "Distressing")):
+                    col.metric(band, f"{s['intensity'][band]:.0%}")
 
     with card():
         st.subheader("Side effects patients mention")

@@ -5,7 +5,7 @@ from core.explain import intensity_band, key_sentences, summary_sentence, why
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.ui import card, load_predictor
-from core.viz import ASPECT_COLORS, MUTED, intensity_meter, score_bar, star_rating, va_map
+from core.viz import ASPECT_COLORS, MUTED, intensity_gauge, score_bar, star_rating, va_map
 
 EXAMPLES = {
     "Works, but rough start": "Zoloft fixed my anxiety within a month, which honestly felt like a miracle. "
@@ -77,11 +77,8 @@ with right:
                         st.markdown(star_rating(r["rating"], r["scale"], kind, size=20), unsafe_allow_html=True)
                         st.markdown(score_bar(r["rating"], r["scale"], ASPECT_COLORS[kind]), unsafe_allow_html=True)
                     with i_col:
-                        st.caption("Intensity")
-                        st.markdown(f"<span style='font-size:20px;font-weight:600'>{band}</span> "
-                                    f"<span style='font-family:IBM Plex Mono,monospace;font-size:13px;color:{MUTED}'>"
-                                    f"arousal {r['arousal']:.1f}/9</span>", unsafe_allow_html=True)
-                        st.markdown(intensity_meter(r["arousal"]), unsafe_allow_html=True)
+                        st.caption("Intensity: how calm or intense it sounds")
+                        st.markdown(intensity_gauge(r["arousal"], kind, size=190), unsafe_allow_html=True)
                     line = f"**Why:** {why(kind, r['valence'], r['arousal'])}"
                     if r["aspect"] in keys:
                         line += f"  \nMost influential sentence: _“{keys[r['aspect']][0]}”_"

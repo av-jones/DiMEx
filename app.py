@@ -27,7 +27,7 @@ st.markdown(
     <style>
     /* Thin outlined icons for the phone tab bar: a 5 KB cut of Google's Material Symbols Outlined
        (Apache 2.0, static/dimex-icons.LICENSE) with only the four icons used, served from static/ */
-    @font-face {{ font-family: "DiMEx Icons"; src: url("/app/static/dimex-icons.woff2") format("woff2");
+    @font-face {{ font-family: "DiMEx Icons"; src: url("app/static/dimex-icons.woff2") format("woff2");
                   font-weight: 100 700; font-display: block; }}
     /* Header: navy band with the DiMEx name on the left and the page links centered */
     [data-testid="stHeader"] {{
@@ -95,7 +95,7 @@ st.markdown(
                                       white-space: nowrap; }}
         /* Big, thin, outlined icons (Material Symbols: no fill, light stroke weight) */
         [class*="st-key-bnav_"] a [data-testid="stIconMaterial"] {{
-            font-family: "DiMEx Icons" !important; font-feature-settings: "liga" 1;
+            font-family: "DiMEx Icons", "Material Symbols Rounded" !important; font-feature-settings: "liga" 1;
             font-size: 34px !important; line-height: 1 !important;
             font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 40 !important; }}
         [class*="st-key-bnav_"][class*="_on"] a {{ color: {NAVY} !important; background: #EAF0F8 !important; }}

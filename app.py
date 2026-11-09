@@ -138,14 +138,16 @@ st.markdown(
     }}
     .st-key-picker_band::before {{
         content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.11) 50%, transparent 100%)
-                    no-repeat;
-        background-size: 35% 100%; background-position: -60% 0;
-        animation: dimexSweep 14s ease-in-out infinite;
+        /* very soft, wide band whose edges fade out gradually, so it reads as a shift in light, not a stripe */
+        background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.015) 20%,
+                    rgba(255, 255, 255, 0.04) 40%, rgba(255, 255, 255, 0.055) 50%, rgba(255, 255, 255, 0.04) 60%,
+                    rgba(255, 255, 255, 0.015) 80%, rgba(255, 255, 255, 0) 100%) no-repeat;
+        background-size: 70% 100%; background-position: -150% 0;
+        animation: dimexSweep 24s ease-in-out infinite;
     }}
     @keyframes dimexDrift {{ from {{ background-position: 0 center, 0 0; }}
                              to   {{ background-position: 1200px center, 0 0; }} }}
-    @keyframes dimexSweep {{ 0% {{ background-position: -60% 0; }} 70%, 100% {{ background-position: 160% 0; }} }}
+    @keyframes dimexSweep {{ 0% {{ background-position: -150% 0; }} 75%, 100% {{ background-position: 250% 0; }} }}
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band::before {{ animation: none; opacity: 0; }} }}
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
     .band-greeting {{ text-align: center; color: #FFD98A; font-size: 1.05rem; font-weight: 600;

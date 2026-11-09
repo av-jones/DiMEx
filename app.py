@@ -60,7 +60,38 @@ st.markdown(
         color: #FFFFFF !important;
     }}
     @media (max-width: 1180px) {{ [data-testid="stHeader"]::after {{ display: none; }} }}
-    @media (max-width: 760px) {{ [data-testid="stHeader"]::before {{ display: none; }} }}
+
+    /* Bottom tab bar: hidden on wider screens */
+    .st-key-bottom_nav {{ display: none !important; }}
+    @media (max-width: 760px) {{
+        /* Header keeps the DiMEx name; the menu buttons go (the bottom bar does navigation) */
+        [data-testid="stHeader"]::before {{ left: 20px; }}
+        [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="stExpandSidebarButton"],
+        [data-testid="stMainMenu"], [data-testid="stAppDeployButton"], [data-testid="stTopNav"] {{ display: none !important; }}
+        .st-key-bottom_nav {{
+            display: flex !important; position: fixed; left: 0; right: 0; bottom: 0; z-index: 999990;
+            width: 100vw !important; margin: 0 !important; gap: 0 !important;
+            padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+            background: rgba(8, 38, 96, 0.92); backdrop-filter: blur(12px) saturate(140%);
+            -webkit-backdrop-filter: blur(12px) saturate(140%); border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }}
+        .st-key-bottom_nav {{ flex-wrap: nowrap !important; }}
+        .st-key-bottom_nav > [data-testid="stLayoutWrapper"] {{ flex: 1 1 0 !important; min-width: 0 !important; }}
+        [class*="st-key-bnav_"], [class*="st-key-bnav_"] [data-testid="stElementContainer"],
+        [class*="st-key-bnav_"] [data-testid="stPageLink"] {{ width: 100% !important; }}
+        .st-key-picker_band {{ margin-top: -40px !important; }}           /* sit flush under the header */
+        [class*="st-key-bnav_"] a {{
+            display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            padding: 6px 2px !important; border-radius: 10px; background: transparent !important;
+            color: rgba(255, 255, 255, 0.72) !important; text-decoration: none;
+        }}
+        [class*="st-key-bnav_"] a * {{ color: inherit !important; font-size: 12px !important; margin: 0 !important;
+                                      white-space: nowrap; }}
+        [class*="st-key-bnav_"] a [data-testid="stIconMaterial"] {{ font-size: 24px !important; }}
+        [class*="st-key-bnav_"][class*="_on"] a {{ color: #FFFFFF !important; background: rgba(255, 255, 255, 0.12) !important; }}
+        /* Room under the content so the bar never covers the footer */
+        .dimex-footer {{ padding-bottom: calc(96px + env(safe-area-inset-bottom)); }}
+    }}
 
     /* Drug page: a full-width lighter-navy band right under the header holds the pickers */
     .st-key-picker_band {{
@@ -158,16 +189,23 @@ st.markdown(
 
 st.session_state["_card_n"] = 0        # card keys restart at card_0 on every run (core.ui.card)
 
-pages = st.navigation(
-    [
-        st.Page("views/drug.py", title="Drugs", default=True),
-        st.Page("views/demo.py", title="Try a review"),
-        # Reached through "Open review" buttons only, so it has no tab
-        st.Page("views/review.py", title="Review detail", visibility="hidden"),
-    ],
-    position="top",
-)
-pages.run()
+DRUGS = st.Page("views/drug.py", title="Drugs", default=True)
+TRY = st.Page("views/demo.py", title="Try a review")
+CARD = st.Page("views/model_card.py", title="Model card", url_path="model-card")
+# Reached through "Open review" buttons only, so it has no tab
+REVIEW = st.Page("views/review.py", title="Review detail", visibility="hidden")
+page = st.navigation([DRUGS, TRY, CARD, REVIEW], position="top")
+
+# Phones: a bottom tab bar with icons replaces the top links (CSS shows it below 760px only)
+with st.container(key="bottom_nav", horizontal=True):
+    for target, label, icon in [(DRUGS, "Drugs", ":material/medication:"),
+                                (TRY, "Try a review", ":material/rate_review:"),
+                                (CARD, "Model card", ":material/fact_check:")]:
+        on = page.url_path == target.url_path
+        with st.container(key=f"bnav_{target.url_path or 'home'}_{'on' if on else 'off'}"):
+            st.page_link(target, label=label, icon=icon)
+
+page.run()
 
 st.markdown(
     """

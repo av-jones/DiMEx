@@ -117,6 +117,14 @@ st.markdown(
                       letter-spacing: .01em; margin-bottom: 2px; }}
     /* Charts sit on white cards, so draw them on white (Streamlit paints them the page grey) */
     [data-testid="stVegaLiteChart"] svg.marks {{ background-color: #FFFFFF !important; }}
+    /* Druglib page: each part of a review is a full-width section */
+    .dl-part {{ padding: 14px 0 6px; border-top: 1px solid #E3E8EF; }}
+    .dl-part.dl-first {{ border-top: none; padding-top: 4px; }}
+    .dl-head {{ display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; }}
+    .dl-name {{ font-size: 13px; font-weight: 600; color: #5B6472; text-transform: uppercase; letter-spacing: .04em; }}
+    .dl-scores {{ font-size: 14px; color: #5B6472; }}
+    .dl-scores b {{ color: #1B2430; }}
+    .dl-quote {{ font-size: 1.05rem; line-height: 1.6; margin: 6px 0 2px; color: #1B2430; }}
     .big-head {{ font-size: 1.85rem !important; margin: 0 0 4px !important; padding: 0 !important; }}
     .big-note, .big-note * {{ font-size: 1.2rem !important; line-height: 1.6 !important; color: #3A4352; }}
     .big-note {{ margin: 0 0 8px !important; }}

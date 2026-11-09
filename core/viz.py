@@ -14,33 +14,41 @@ BAND_COLORS = {"Mild": MILD, "Calm": MILD, "Moderate": MOD, "Distressing": DIST,
 ASPECT_COLORS = {"effectiveness": POS, "side_effect": NEG, "satisfaction": NEU}
 
 
+def person_icon(size=18, color=NEG):
+    """A small person glyph (head and shoulders) as inline SVG: marks the patient's own rating."""
+    return (f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" aria-hidden="true" style="display:block">'
+            f'<circle cx="12" cy="12" r="11.5" fill="#fff" stroke="{color}" stroke-width="1.5"/>'
+            f'<circle cx="12" cy="9" r="3.6" fill="{color}"/>'
+            f'<path d="M5.2 19.2c1.2-3.3 3.8-5 6.8-5s5.6 1.7 6.8 5" fill="{color}"/></svg>')
+
+
 def compare_bar(patient, model, scale):
     """The patient's rating and the model's prediction as two markers on one 1..scale track,
-    joined by a line whose length is the disagreement. Patient = navy square, model = blue circle."""
+    joined by a line whose length is the disagreement. Patient = person icon, model = blue circle."""
     def pct(x):
         return (x - 1) / (scale - 1) * 100
     lo, hi = sorted([pct(patient), pct(model)])
-    ticks = range(1, scale + 1) if scale == 5 else [1, 4, 7, 10]
+    ticks = range(1, scale + 1) if scale == 5 else range(1, 11)
     tick_html = "".join(f"<span>{t}</span>" for t in ticks)
     return f"""
-<div role="img" aria-label="Patient {patient:g}, model {model:.1f}, out of {scale}" style="margin:10px 0 2px">
+<div role="img" aria-label="Patient {patient:g}, model {model:.1f}, out of {scale}" style="margin:16px 10px 2px">
   <div style="position:relative;height:6px;background:{SOFT};border-radius:3px">
     <div style="position:absolute;left:{lo:.1f}%;width:{hi - lo:.1f}%;top:0;bottom:0;background:#9DB7E0;
                 border-radius:3px"></div>
-    <div title="Patient" style="position:absolute;left:calc({pct(patient):.1f}% - 7px);top:-4px;width:14px;
-                height:14px;background:{NEG};border-radius:3px"></div>
-    <div title="DiMEx" style="position:absolute;left:calc({pct(model):.1f}% - 7px);top:-4px;width:14px;height:14px;
+    <div title="DiMEx" style="position:absolute;left:calc({pct(model):.1f}% - 8px);top:-5px;width:16px;height:16px;
                 border-radius:50%;background:#fff;border:3px solid {POS};box-sizing:border-box"></div>
+    <div title="Patient" style="position:absolute;left:calc({pct(patient):.1f}% - 12px);top:-9px;z-index:1">
+      {person_icon(24)}</div>
   </div>
-  <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;
-              color:{MUTED};margin-top:6px">{tick_html}</div>
+  <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;
+              color:{MUTED};margin:10px -4px 0">{tick_html}</div>
 </div>"""
 
 
-COMPARE_KEY = (f'<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">'
-               f'<span style="width:12px;height:12px;background:{NEG};border-radius:3px"></span>Patient\'s rating</span>'
-               f'<span style="display:inline-flex;align-items:center;gap:6px">'
-               f'<span style="width:12px;height:12px;border-radius:50%;border:3px solid {POS};box-sizing:border-box">'
+COMPARE_KEY = (f'<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;vertical-align:middle">'
+               f'{person_icon(18)}Patient\'s rating</span>'
+               f'<span style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle">'
+               f'<span style="width:14px;height:14px;border-radius:50%;border:3px solid {POS};box-sizing:border-box">'
                f'</span>DiMEx prediction</span>')
 
 

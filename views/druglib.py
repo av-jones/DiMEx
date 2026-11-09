@@ -74,23 +74,20 @@ for r in sub.head(shown).itertuples():
         head.markdown(f"**{html.escape(r.drug)}** <span style='color:{MUTED}'>· {html.escape(r.condition)} "
                       f"· review #{r.review_id}</span>", unsafe_allow_html=True)
         tag.markdown(f"<div style='text-align:right'>{chip(gap_label(r.gap))}</div>", unsafe_allow_html=True)
-        cols = st.columns(3, gap="large")
-        for col, (k, text_col, name, _, scale) in zip(cols, ASPECTS):
+        # One full-width section per part of the review: what they wrote, then patient vs. DiMEx
+        for i, (k, text_col, name, _, scale) in enumerate(ASPECTS):
             gold, pred, text = getattr(r, f"gold_{k}"), getattr(r, f"pred_{k}"), getattr(r, text_col)
-            with col:
-                st.markdown(f"<div class='group-head' style='margin-top:0'>{name}</div>", unsafe_allow_html=True)
-                if text:
-                    short = text if len(text) <= 260 else text[:257].rsplit(" ", 1)[0] + "…"
-                    st.markdown(f"<div style='font-size:15px;line-height:1.5;min-height:3em'>“{html.escape(short)}”"
-                                "</div>", unsafe_allow_html=True)
-                else:
-                    st.caption("No text for this part.")
-                if gold == gold and pred == pred:            # both present (not NaN)
-                    level = LEVEL_NAMES.get(k, {}).get(int(gold))
-                    st.markdown(compare_bar(float(gold), float(pred), scale), unsafe_allow_html=True)
-                    st.markdown(f"<div style='font-size:13px'>Patient <b>{gold:g}</b>"
-                                f"{' (' + level + ')' if level else ''} · DiMEx <b>{pred:.1f}</b></div>",
-                                unsafe_allow_html=True)
+            both = gold == gold and pred == pred                       # both present (not NaN)
+            level = LEVEL_NAMES.get(k, {}).get(int(gold)) if gold == gold else None
+            scores = (f"<span class='dl-scores'>Patient <b style='color:#1B2430'>{gold:g}</b>"
+                      f"{' (' + level + ')' if level else ''} · DiMEx <b style='color:#1B2430'>{pred:.1f}</b>"
+                      f" · scale 1–{scale}</span>") if both else ""
+            st.markdown(f"<div class='dl-part{' dl-first' if i == 0 else ''}'>"
+                        f"<div class='dl-head'><span class='dl-name'>{name}</span>{scores}</div>"
+                        + (f"<div class='dl-quote'>“{html.escape(text)}”</div>" if text
+                           else f"<div class='dl-quote' style='color:{MUTED}'>No text for this part.</div>")
+                        + (compare_bar(float(gold), float(pred), scale) if both else "")
+                        + "</div>", unsafe_allow_html=True)
 
 if shown < len(sub):
     if st.button(f"Show more ({len(sub) - shown:,} left)", width="stretch"):

@@ -80,3 +80,19 @@ Design notes:
 - Six models will not all fit in GPU memory at once. In deployment, keep one or two available for the live demo.
 - Keep `data/predictions.parquet` out of public repos. It contains Drugs.com review text, and the dataset terms say not to redistribute it.
 - Deploy on Hugging Face Spaces (Streamlit) or Streamlit Community Cloud.
+
+## Access (sign-in)
+
+The app shows only a sign-in form until a visitor signs in with an invited email and password.
+Accounts are stored as bcrypt hashes in Streamlit secrets, never in this repo:
+
+1. Run `python scripts/add_user.py name@unf.edu` and type a password (10+ characters). It prints one line.
+2. On Streamlit Cloud: App settings → Secrets, then add (one line per person):
+
+   ```toml
+   [users]
+   "name@unf.edu" = "$2b$12$..."
+   ```
+3. Share the password with that person privately. To remove someone, delete their line.
+
+Locally, the same lines go in `.streamlit/secrets.toml` (git-ignored).

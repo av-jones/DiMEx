@@ -6,3 +6,4 @@ pyarrow>=14
 torch
 transformers>=4.48
 sentencepiece
+bcrypt>=4.0

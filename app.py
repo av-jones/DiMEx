@@ -188,6 +188,22 @@ st.markdown(
 
 st.session_state["_card_n"] = 0        # card keys restart at card_0 on every run (core.ui.card)
 
+from core.auth import login_page, sign_out, signed_in  # noqa: E402
+
+FOOTER = """
+    <div class="dimex-footer">
+      <div><strong>DiMEx</strong> · Dimensional Medication Experience Viewer</div>
+      <div>Patient-reported experiences, not medical advice.</div>
+      <div>Data: Druglib.com and Drugs.com (UCI ML Repository) · SemEval-2026 Task 3 (DimABSA)</div>
+    </div>
+"""
+
+# Sign-in gate: until a visitor signs in, only the sign-in form renders (no pages, no data)
+if not signed_in():
+    login_page()
+    st.markdown(FOOTER, unsafe_allow_html=True)
+    st.stop()
+
 DRUGS = st.Page("views/drug.py", title="Drugs", default=True)
 TRY = st.Page("views/demo.py", title="Try a review")
 CARD = st.Page("views/model_card.py", title="Model card", url_path="model-card")
@@ -206,13 +222,8 @@ with st.container(key="bottom_nav", horizontal=True):
         with st.container(key=f"bnav_{target.url_path or 'home'}_{'on' if on else 'off'}"):
             st.page_link(target, label=label, icon=icon)
 
-st.markdown(
-    """
-    <div class="dimex-footer">
-      <div><strong>DiMEx</strong> · Dimensional Medication Experience Viewer</div>
-      <div>Patient-reported experiences, not medical advice.</div>
-      <div>Data: Druglib.com and Drugs.com (UCI ML Repository) · SemEval-2026 Task 3 (DimABSA)</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", key="signout_row"):
+    st.caption("Signed in as " + st.session_state.user.replace("@", "@\u200b"))   # zero-width space: not a link
+    st.button("Sign out", key="signout", on_click=sign_out, type="tertiary")
+
+st.markdown(FOOTER, unsafe_allow_html=True)

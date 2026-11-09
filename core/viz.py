@@ -15,11 +15,11 @@ ASPECT_COLORS = {"effectiveness": POS, "side_effect": NEG, "satisfaction": NEU}
 
 
 def person_icon(size=18, color=NEG):
-    """A small person glyph (head and shoulders) as inline SVG: marks the patient's own rating."""
+    """A small person glyph (head and shoulders), white on a navy circle: marks the patient's own rating."""
     return (f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" aria-hidden="true" style="display:block">'
-            f'<circle cx="12" cy="12" r="11.5" fill="#fff" stroke="{color}" stroke-width="1.5"/>'
-            f'<circle cx="12" cy="9" r="3.6" fill="{color}"/>'
-            f'<path d="M5.2 19.2c1.2-3.3 3.8-5 6.8-5s5.6 1.7 6.8 5" fill="{color}"/></svg>')
+            f'<circle cx="12" cy="12" r="11.5" fill="{color}" stroke="#fff" stroke-width="1"/>'
+            f'<circle cx="12" cy="9" r="3.6" fill="#fff"/>'
+            f'<path d="M5.2 19.2c1.2-3.3 3.8-5 6.8-5s5.6 1.7 6.8 5" fill="#fff"/></svg>')
 
 
 def dimex_icon(size=18):

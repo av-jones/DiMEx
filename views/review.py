@@ -4,7 +4,7 @@ import streamlit as st
 from core.data import mentions
 from core.labels import chip
 from core.registry import MODEL_NAMES
-from core.ui import fake_data_banner, highlight, load_predictions
+from core.ui import card, fake_data_banner, highlight, load_predictions
 
 preds = mentions(load_predictions())   # keyword-found aspects; whole-review scores are on other pages
 fake_data_banner()
@@ -24,7 +24,7 @@ st.page_link("views/drug.py", label=f"{first.drug} for {first.condition.lower()}
 main, side = st.columns([3, 1.3], gap="large")
 
 with main:
-    with st.container(border=True):
+    with card():
         st.caption(f"Drugs.com review · {first.condition} · Scored by {model}")
         st.metric("Patient's star rating", f"{first.rating}/10")
         text = first.text
@@ -32,7 +32,7 @@ with main:
             text = highlight(text, span)
         st.markdown(f"#### {text}")
 
-    with st.container(border=True):
+    with card():
         head, toggle = st.columns([2, 1.4], vertical_alignment="center")
         head.subheader("What the model found")
         show = toggle.toggle("Show valence and arousal scores")
@@ -49,7 +49,7 @@ with side:
         st.info("**High rating, severe side effect.** The stars reflect effectiveness more "
                  "than tolerability for this patient.")
 
-    with st.container(border=True):
+    with card():
         st.subheader("Model comparison")
         everyone = preds[preds.review_id == rid]
         table = (everyone.pivot_table(index="model", columns="aspect", values="label", aggfunc="first")
@@ -61,7 +61,7 @@ with side:
         else:
             st.info("Models disagree on at least one aspect. Treat this review as uncertain.")
 
-    with st.container(border=True):
+    with card():
         st.subheader("Patient's own aspect ratings")
         st.write("Not available. Drugs.com reviews only have a star rating, so every label here "
                  "comes from the model. See Model check for Druglib reviews with patient ratings.")

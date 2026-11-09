@@ -2,7 +2,7 @@ import streamlit as st
 
 from core.data import FIELDS, druglib_scores, druglib_test
 from core.registry import MODEL_NAMES, MODELS
-from core.ui import fake_data_banner, load_evaluation, load_predictor
+from core.ui import card, fake_data_banner, load_evaluation, load_predictor
 
 reviews = druglib_test()
 fake_data_banner()
@@ -31,7 +31,7 @@ if c4.button("Next", icon=":material/chevron_right:", width="stretch"):
 review = reviews[st.session_state.check_idx]
 scores = druglib_scores(load_predictor(model), review)
 
-with st.container(border=True):
+with card():
     st.subheader(f"{review['drug']} for {review['condition']}")
     for (key, section, label, kind, scale), pred, patient in zip(FIELDS, scores, review["ratings"]):
         st.divider()
@@ -45,7 +45,7 @@ with st.container(border=True):
         m1.metric("Model", f"{pred:.1f}", delta=f"{diff:+.1f} vs patient", delta_color="off")
         m2.metric("Patient", str(patient))
 
-with st.container(border=True):
+with card():
     st.subheader("Results on the test split")
     st.caption("Lower is better. Satisfaction is on a 1–10 scale, so its errors run larger.")
     results = load_evaluation()

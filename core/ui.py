@@ -39,3 +39,11 @@ def highlight(text, span):
     if span and span in text:
         return text.replace(span, f":blue-background[{span}]", 1)
     return text
+
+
+def card(parent=None):
+    """A bordered container with a white background (styled by its key in app.py).
+    Keys are numbered in page order; app.py resets the counter on every run so they stay stable."""
+    n = st.session_state.get("_card_n", 0)
+    st.session_state["_card_n"] = n + 1
+    return (parent or st).container(border=True, key=f"card_{n}")

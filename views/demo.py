@@ -4,7 +4,7 @@ import streamlit as st
 from core.explain import intensity_band, key_sentences, summary_sentence, why
 from core.labels import chip
 from core.registry import MODEL_NAMES, is_real
-from core.ui import fake_data_banner, load_predictor
+from core.ui import card, fake_data_banner, load_predictor
 from core.viz import ASPECT_COLORS, MUTED, intensity_meter, score_bar, va_map
 
 EXAMPLES = {
@@ -31,7 +31,7 @@ if "demo_text" not in st.session_state:
 left, right = st.columns([1, 1.6], gap="large")
 
 with left:
-    with st.container(border=True):
+    with card():
         st.caption("Try an example")
         for label, text in EXAMPLES.items():
             if st.button(label, width="stretch"):
@@ -48,7 +48,7 @@ with right:
     if run and not text.strip():
         st.error("Enter a review first.")
     elif not run:
-        with st.container(border=True):
+        with card():
             st.subheader("Results appear here")
             st.caption("You'll get a one-sentence summary, a score and an intensity reading for each "
                        "aspect, and a map of where the review lands on valence and arousal.")
@@ -59,18 +59,18 @@ with right:
             results = predictor.score_review(text)
             keys = key_sentences(predictor, text)
 
-        with st.container(border=True):
+        with card():
             st.caption("IN ONE SENTENCE")
             st.markdown(f"#### {summary_sentence(results)}")
 
-        with st.container(border=True):
+        with card():
             head, note = st.columns([1, 2], vertical_alignment="bottom")
             head.subheader("By aspect")
             note.caption("Score = direction (Druglib's scale) · Intensity = how strongly it's felt")
             for r in results:
                 kind = r["kind"]
                 band = intensity_band(r["arousal"], kind)
-                with st.container(border=True):
+                with card():
                     a, b = st.columns([2, 1.2], vertical_alignment="center")
                     a.markdown(f"**{SHORT[kind]}**")
                     b.markdown(chip(r["label"]), unsafe_allow_html=True)
@@ -92,7 +92,7 @@ with right:
                         line += f"  \nMost influential sentence: _“{keys[r['aspect']][0]}”_"
                     st.markdown(line)
 
-        with st.container(border=True):
+        with card():
             chart, explain = st.columns([1.3, 1], gap="large", vertical_alignment="center")
             pts = pd.DataFrame([{"v": r["valence"], "a": r["arousal"], "label": SHORT[r["kind"]],
                                  "color": ASPECT_COLORS[r["kind"]]} for r in results])
@@ -106,7 +106,7 @@ with right:
 
         if stars is not None:
             sat = next(r for r in results if r["kind"] == "satisfaction")
-            with st.container(border=True):
+            with card():
                 st.subheader("Stars vs. model")
                 c1, c2 = st.columns(2)
                 c1.metric("Patient's stars", f"{stars} / 10")

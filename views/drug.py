@@ -3,7 +3,7 @@ import streamlit as st
 from core.data import summarize
 from core.labels import chip
 from core.registry import MODEL_NAMES, is_real
-from core.ui import fake_data_banner, highlight, load_predictions
+from core.ui import card, fake_data_banner, highlight, load_predictions
 from core.viz import MUTED, legend, stacked, va_map
 
 TILES = [("effectiveness", "Effectiveness", "How well it worked, from review text"),
@@ -27,7 +27,7 @@ st.caption(f"For {condition.lower()} · {s['n']:,} reviews analyzed · Source: D
 # ---- three summary tiles
 cols = st.columns(3)
 for col, (kind, name, sub) in zip(cols, TILES):
-    with col.container(border=True):
+    with card(col):
         t = s["tiles"].get(kind)
         if not t:
             st.markdown(f"**{name}**")
@@ -45,7 +45,7 @@ main, side = st.columns([1.7, 1], gap="large")
 
 with main:
     if s["intensity"]:
-        with st.container(border=True):
+        with card():
             st.subheader("How intense are the side effects?")
             st.caption("Share of reviews reporting side effects, by how intensely they describe them")
             st.markdown(stacked(s["intensity"], height=18), unsafe_allow_html=True)
@@ -53,7 +53,7 @@ with main:
             for col, band in zip(cols, ("Mild", "Moderate", "Distressing")):
                 col.metric(band, f"{s['intensity'][band]:.0%}")
 
-    with st.container(border=True):
+    with card():
         st.subheader("Side effects patients mention")
         st.markdown(legend(), unsafe_allow_html=True)
         for e in s["effects"]:
@@ -67,7 +67,7 @@ with main:
                    "Side effects are found by keyword and each mention is scored separately "
                    "(experimental: the model was trained on whole-review side-effect severity).")
 
-    with st.container(border=True):
+    with card():
         st.subheader("Same severity, different experience")
         others = sorted(d for d in preds[preds.condition == condition].drug.unique() if d != drug)
         if not others:
@@ -86,10 +86,10 @@ with main:
             st.caption("Two drugs can have the same average severity but a different mix: more "
                        "distressing reports for one, more moderate ones for the other. A single score hides this.")
 
-    with st.container(border=True):
+    with card():
         st.subheader("What patients say")
         for q in s["quotes"]:
-            with st.container(border=True):
+            with card():
                 st.markdown(highlight(q.text, q.span))
                 left, right = st.columns([3, 1], vertical_alignment="center")
                 left.markdown(f"{chip(q.label)} {q.aspect} · Rated {q.rating}/10", unsafe_allow_html=True)
@@ -99,21 +99,21 @@ with main:
 
 with side:
     if len(s["dots"]):
-        with st.container(border=True):
+        with card():
             st.subheader("Where side-effect reports land")
             st.caption("Each dot is one review's side-effect score")
             st.altair_chart(va_map(dots=s["dots"], height=300), width="stretch")
             st.markdown(legend(), unsafe_allow_html=True)
 
     if s["mismatch"]:
-        with st.container(border=True):
+        with card():
             st.markdown("**Stars don't tell the whole story**")
             st.write(f"{len(s['mismatch'])} reviews give 9–10 stars while describing distressing side effects.")
             if st.button("See an example"):
                 st.session_state.review_id = int(s["mismatch"][0])
                 st.switch_page("views/review.py")
 
-    with st.container(border=True):
+    with card():
         st.subheader("How to read this page")
         st.markdown("- **Scores** use Druglib's patient rating scales (1–5, 1–10).\n"
                     "- **Intensity** is how strongly the patient expresses it, from calm to intense.\n"

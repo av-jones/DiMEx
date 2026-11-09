@@ -22,9 +22,19 @@ def person_icon(size=18, color=NEG):
             f'<path d="M5.2 19.2c1.2-3.3 3.8-5 6.8-5s5.6 1.7 6.8 5" fill="{color}"/></svg>')
 
 
+def dimex_icon(size=18):
+    """The DiMEx logo mark (crossing axes, a large blue dot top right, a small navy dot bottom left) in a white
+    circle with a blue ring: marks DiMEx's prediction, next to the patient's person icon."""
+    return (f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" aria-hidden="true" style="display:block">'
+            f'<circle cx="12" cy="12" r="11.2" fill="#fff" stroke="{POS}" stroke-width="1.6"/>'
+            f'<path d="M12 4v16M4 12h16" stroke="#8A97AB" stroke-width="1.4" stroke-linecap="round"/>'
+            f'<circle cx="16.4" cy="7.6" r="3.7" fill="{POS}"/>'
+            f'<circle cx="7.9" cy="16.1" r="2.3" fill="{NEG}"/></svg>')
+
+
 def compare_bar(patient, model, scale):
     """The patient's rating and the model's prediction as two markers on one 1..scale track,
-    joined by a line whose length is the disagreement. Patient = person icon, model = blue circle."""
+    joined by a line whose length is the disagreement. Patient = person icon, model = the DiMEx mark."""
     def pct(x):
         return (x - 1) / (scale - 1) * 100
     lo, hi = sorted([pct(patient), pct(model)])
@@ -35,8 +45,7 @@ def compare_bar(patient, model, scale):
   <div style="position:relative;height:6px;background:{SOFT};border-radius:3px">
     <div style="position:absolute;left:{lo:.1f}%;width:{hi - lo:.1f}%;top:0;bottom:0;background:#9DB7E0;
                 border-radius:3px"></div>
-    <div title="DiMEx" style="position:absolute;left:calc({pct(model):.1f}% - 8px);top:-5px;width:16px;height:16px;
-                border-radius:50%;background:#fff;border:3px solid {POS};box-sizing:border-box"></div>
+    <div title="DiMEx" style="position:absolute;left:calc({pct(model):.1f}% - 12px);top:-9px">{dimex_icon(24)}</div>
     <div title="Patient" style="position:absolute;left:calc({pct(patient):.1f}% - 12px);top:-9px;z-index:1">
       {person_icon(24)}</div>
   </div>
@@ -48,8 +57,7 @@ def compare_bar(patient, model, scale):
 COMPARE_KEY = (f'<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;vertical-align:middle">'
                f'{person_icon(18)}Patient\'s rating</span>'
                f'<span style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle">'
-               f'<span style="width:14px;height:14px;border-radius:50%;border:3px solid {POS};box-sizing:border-box">'
-               f'</span>DiMEx prediction</span>')
+               f'{dimex_icon(18)}DiMEx prediction</span>')
 
 
 def score_bar(value, scale, color):

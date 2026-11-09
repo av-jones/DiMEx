@@ -154,7 +154,6 @@ st.markdown(
     [class*="st-key-dl_panel_"] [data-testid="stCaptionContainer"] p,
     [class*="st-key-dl_panel_"] .dl-muted {{ color: rgba(255, 255, 255, 0.75) !important; }}
     [class*="st-key-dl_panel_"] [data-testid="stSelectbox"] div:has(> input) {{ border-color: #FFFFFF !important; }}
-    [class*="st-key-dl_panel_"] .dl-muted span[style*="border-radius:50%"] {{ border-color: #8FB4F0 !important; }}
     [class*="st-key-dl_panel_"] [data-testid="stCaptionContainer"] p {{ color: rgba(255, 255, 255, 0.8) !important; }}
     .dl-part {{ display: grid; grid-template-columns: 2fr 1fr; gap: 8px 40px; align-items: center;
                 padding: 14px 0 10px; border-top: 1px solid #E3E8EF; }}

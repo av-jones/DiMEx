@@ -10,7 +10,7 @@ st.caption("What the DiMEx model is, how it was trained and tested, and what it 
 
 with card():
     st.subheader("Authors")
-    st.markdown("**Tejaswi V., Athlene V. Jones, Joseph O'Berry**  \n"
+    st.markdown("**Tejaswi Vemuri, Athlene V. Jones, Joseph O'Berry**  \n"
                 "University of North Florida, Jacksonville, Florida, USA")
 
 if not is_real(APP_MODEL):

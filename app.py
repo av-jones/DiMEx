@@ -25,6 +25,10 @@ WAVES = _waves()
 st.markdown(
     f"""
     <style>
+    /* Thin outlined icons for the phone tab bar: a 5 KB cut of Google's Material Symbols Outlined
+       (Apache 2.0, static/dimex-icons.LICENSE) with only the four icons used, served from static/ */
+    @font-face {{ font-family: "DiMEx Icons"; src: url("/app/static/dimex-icons.woff2") format("woff2");
+                  font-weight: 100 700; font-display: block; }}
     /* Header: navy band with the DiMEx name on the left and the page links centered */
     [data-testid="stHeader"] {{
         background: rgba(8, 38, 96, 0.88); height: 64px;         /* deep blue, slightly see-through */
@@ -74,8 +78,9 @@ st.markdown(
             display: flex !important; position: fixed; left: 0; right: 0; bottom: 0; z-index: 999990;
             width: 100vw !important; margin: 0 !important; gap: 0 !important;
             padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-            background: rgba(8, 38, 96, 0.92); backdrop-filter: blur(12px) saturate(140%);
-            -webkit-backdrop-filter: blur(12px) saturate(140%); border-top: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px) saturate(140%);
+            -webkit-backdrop-filter: blur(12px) saturate(140%); border-top: 1px solid #DDE2E9;
+            box-shadow: 0 -4px 16px rgba(11, 46, 89, 0.06);
         }}
         .st-key-bottom_nav {{ flex-wrap: nowrap !important; }}
         .st-key-bottom_nav > [data-testid="stLayoutWrapper"] {{ flex: 1 1 0 !important; min-width: 0 !important; }}
@@ -84,12 +89,17 @@ st.markdown(
         [class*="st-key-bnav_"] a {{
             display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
             padding: 6px 2px !important; border-radius: 10px; background: transparent !important;
-            color: rgba(255, 255, 255, 0.72) !important; text-decoration: none;
+            color: #5B6472 !important; text-decoration: none;
         }}
         [class*="st-key-bnav_"] a * {{ color: inherit !important; font-size: 12px !important; margin: 0 !important;
                                       white-space: nowrap; }}
-        [class*="st-key-bnav_"] a [data-testid="stIconMaterial"] {{ font-size: 24px !important; }}
-        [class*="st-key-bnav_"][class*="_on"] a {{ color: #FFFFFF !important; background: rgba(255, 255, 255, 0.12) !important; }}
+        /* Big, thin, outlined icons (Material Symbols: no fill, light stroke weight) */
+        [class*="st-key-bnav_"] a [data-testid="stIconMaterial"] {{
+            font-family: "DiMEx Icons" !important; font-feature-settings: "liga" 1;
+            font-size: 34px !important; line-height: 1 !important;
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 40 !important; }}
+        [class*="st-key-bnav_"][class*="_on"] a {{ color: {NAVY} !important; background: #EAF0F8 !important; }}
+        [class*="st-key-bnav_"][class*="_on"] a p {{ font-weight: 600 !important; }}
         /* Room under the content so the bar never covers the footer */
         .dimex-footer {{ padding-bottom: calc(96px + env(safe-area-inset-bottom)); }}
     }}
@@ -235,8 +245,8 @@ if auth_on() and not signed_in():
     st.stop()
 
 DRUGS = st.Page("views/drug.py", title="Drugs", default=True)
-DRUGLIB = st.Page("views/druglib.py", title="Druglib", url_path="druglib")
-TRY = st.Page("views/demo.py", title="Try a review")
+DRUGLIB = st.Page("views/druglib.py", title="Predictions", url_path="predictions")
+TRY = st.Page("views/demo.py", title="Write a review", url_path="write-a-review")
 CARD = st.Page("views/model_card.py", title="Model card", url_path="model-card")
 # Reached through "Open review" buttons only, so it has no tab
 REVIEW = st.Page("views/review.py", title="Review detail", visibility="hidden")
@@ -246,10 +256,10 @@ page.run()
 
 # Phones: a bottom tab bar with icons replaces the top links (CSS shows it below 760px only)
 with st.container(key="bottom_nav", horizontal=True):
-    for target, label, icon in [(DRUGS, "Drugs", ":material/medication:"),
-                                (DRUGLIB, "Druglib", ":material/compare_arrows:"),
-                                (TRY, "Try a review", ":material/rate_review:"),
-                                (CARD, "Model card", ":material/fact_check:")]:
+    for target, label, icon in [(DRUGS, "Drugs", ":material/search:"),
+                                (DRUGLIB, "Predictions", ":material/compare_arrows:"),
+                                (TRY, "Write a review", ":material/edit_square:"),
+                                (CARD, "Model card", ":material/description:")]:
         on = page.url_path == target.url_path
         with st.container(key=f"bnav_{target.url_path or 'home'}_{'on' if on else 'off'}"):
             st.page_link(target, label=label, icon=icon)

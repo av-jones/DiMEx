@@ -12,7 +12,7 @@ PAGE = 8          # reviews shown per "Show more"
 
 df, source = load_druglib()
 
-st.title("Druglib")
+st.title("Predictions")
 st.caption("On Druglib.com, patients rated their own experience: how well the drug worked, how bad the side "
            "effects were and how satisfied they were. Here are their ratings next to DiMEx's, which come only "
            "from what they wrote.")

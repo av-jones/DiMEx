@@ -6,3 +6,6 @@ secondaryBackgroundColor = "#FFFFFF"
 textColor = "#1B2430"
 borderColor = "#DDE2E9"
 font = "sans serif"
+
+[server]
+enableStaticServing = true      # serves static/ (the bottom bar icon font)

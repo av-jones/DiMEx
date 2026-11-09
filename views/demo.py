@@ -18,7 +18,7 @@ EXAMPLES = {
 }
 SHORT = {"effectiveness": "Effectiveness", "side_effect": "Side effects", "satisfaction": "Satisfaction"}
 
-st.title("Try a review")
+st.title("Write a review")
 st.write("Paste a drug review. DiMEx scores how well the drug worked, how bad the side effects were and "
          "how satisfied the patient sounds, and how *intense* each of those feelings is.")
 

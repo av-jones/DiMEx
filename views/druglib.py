@@ -72,11 +72,13 @@ def gap_label(g):
 
 
 for r in sub.head(shown).itertuples():
-    with card():
+    serious = serious_mentions(" ".join([r.benefits, r.side_effects, r.comment]))
+    # Reviews that mention a serious event get a red outline (styled by the key in app.py)
+    box = st.container(border=True, key=f"serious_review_{r.review_id}") if serious else card()
+    with box:
         head, tag = st.columns([3, 1.2], vertical_alignment="center")
         head.markdown(f"**{html.escape(r.drug)}** <span style='color:{MUTED}'>· {html.escape(r.condition)} "
                       f"· review #{r.review_id}</span>", unsafe_allow_html=True)
-        serious = serious_mentions(" ".join([r.benefits, r.side_effects, r.comment]))
         flag = (f"<span class='serious-flag' title='Mentions: {html.escape(', '.join(sorted(set(serious))))}'>"
                 "⚠ Serious event mentioned</span> ") if serious else ""
         tag.markdown(f"<div style='text-align:right'>{flag}{chip(gap_label(r.gap))}</div>", unsafe_allow_html=True)

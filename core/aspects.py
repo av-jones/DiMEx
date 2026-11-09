@@ -43,3 +43,24 @@ def extract(text):
         effect_span = sentences[0]
     items = [{"aspect": "Effectiveness", "kind": "effectiveness", "span": effect_span or ""}]
     return items + found
+
+
+def find_terms(text, effect=True):
+    """The words that mark an aspect, for highlighting: [(start, end, aspect, kind)], in text order.
+    Side-effect terms always; effectiveness cue words when effect=True. A match runs to the end of its word
+    ('help' covers 'helped'), and overlapping matches keep the first."""
+    low, hits = text.lower(), []
+    groups = [(name, "side_effect", cues) for name, cues in SIDE_EFFECTS.items()]
+    if effect:
+        groups.append(("Effectiveness", "effectiveness", EFFECT_CUES))
+    for name, kind, cues in groups:
+        for cue in cues:
+            for m in re.finditer(r"\b" + re.escape(cue) + r"\w*", low):
+                hits.append((m.start(), m.end(), name, kind))
+    hits.sort()
+    out, last = [], -1
+    for h in hits:
+        if h[0] >= last:
+            out.append(h)
+            last = h[1]
+    return out

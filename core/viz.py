@@ -342,3 +342,23 @@ def calibration_chart(by_level, scale, height=300):
             .configure_view(stroke=None).configure(background="#FFFFFF")
             .configure_axis(labelColor=AXIS_INK, titleColor=AXIS_INK, domain=False, ticks=False,
                             titleFontWeight=400, labelFontSize=12, titleFontSize=13))
+
+
+def mark_terms(text, terms):
+    """HTML-escaped text with aspect terms highlighted: effectiveness cues in light blue, side effects in light
+    amber. Hovering a highlight names the aspect. terms: [(start, end, aspect, kind)] from core.aspects.find_terms."""
+    import html as _html
+    style = {"effectiveness": "background:#DCE8FB;color:#123B73",
+             "side_effect": "background:#FCEFC7;color:#5C3F00"}
+    out, pos = [], 0
+    for start, end, aspect, kind in terms:
+        out.append(_html.escape(text[pos:start]))
+        out.append(f'<mark class="aspect-term" title="{_html.escape(aspect)}" style="{style[kind]}">'
+                   f'{_html.escape(text[start:end])}</mark>')
+        pos = end
+    out.append(_html.escape(text[pos:]))
+    return "".join(out)
+
+
+ASPECT_KEY = ('<span class="aspect-term" style="background:#DCE8FB;color:#123B73">effectiveness</span> '
+              '<span class="aspect-term" style="background:#FCEFC7;color:#5C3F00">side effect</span>')

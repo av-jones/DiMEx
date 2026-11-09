@@ -6,7 +6,8 @@ import streamlit as st
 from core.druglib import ASPECTS, LEVEL_NAMES, gap, metrics
 from core.labels import chip
 from core.ui import card, load_druglib, scroll_to
-from core.viz import COMPARE_KEY, MUTED, accuracy_grid, compare_bar
+from core.aspects import find_terms
+from core.viz import ASPECT_KEY, COMPARE_KEY, MUTED, accuracy_grid, compare_bar, mark_terms
 
 PAGE = 8          # reviews shown per "Show more"
 
@@ -50,7 +51,8 @@ with right, st.container(border=True, key="dl_panel_browse", height="stretch"):
     order = st.selectbox("Order", ["Biggest disagreement", "Closest match", "Drug name"], key="dl_order")
     sub = (sub.sort_values("gap", ascending=False) if order == "Biggest disagreement"
            else sub.sort_values("gap") if order == "Closest match" else sub.sort_values(["drug", "review_id"]))
-    st.markdown(f"<div class='dl-muted' style='font-size:13px'>{len(sub):,} reviews · {COMPARE_KEY}</div>",
+    st.markdown(f"<div class='dl-muted' style='font-size:13px'>{len(sub):,} reviews · {COMPARE_KEY}</div>"
+                f"<div class='dl-muted' style='font-size:13px;margin-top:6px'>Highlighted words: {ASPECT_KEY}</div>",
                 unsafe_allow_html=True)
 
 key = (drug, condition, order)
@@ -84,7 +86,8 @@ for r in sub.head(shown).itertuples():
                       f"{' (' + level + ')' if level else ''} · DiMEx <b style='color:#1B2430'>{pred:.1f}</b>"
                       f" · <span title='Absolute error: how far DiMEx is from the patient, in rating points'>"
                       f"off by <b style='color:#1B2430'>{abs(pred - gold):.1f}</b></span></span>") if both else ""
-            quote = (f"<div class='dl-quote'>“{html.escape(text)}”</div>" if text
+            terms = find_terms(text, effect=k != "side")          # side-effect box: side-effect terms only
+            quote = (f"<div class='dl-quote'>“{mark_terms(text, terms)}”</div>" if text
                      else f"<div class='dl-quote' style='color:{MUTED}'>No text for this part.</div>")
             # Left two thirds: what they wrote. Right third: patient vs. DiMEx on the scale.
             st.markdown(f"<div class='dl-part{' dl-first' if i == 0 else ''}'>"

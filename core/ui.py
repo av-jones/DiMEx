@@ -17,12 +17,28 @@ def load_predictions():
 
 @st.cache_data
 def load_pairs():
+    if data.has_predictions():
+        return data.pair_counts(load_predictions())
     return data.load_pairs()
 
 
 @st.cache_data(show_spinner=False, max_entries=64)
-def pair_predictions(drug, condition):
+def _placeholder_pair(drug, condition):
     return data.pair_predictions(drug, condition)
+
+
+def pair_predictions(drug, condition):
+    """One drug-condition pair's predictions. Real ones are sliced from the full table (loaded once)."""
+    if data.has_predictions():
+        df = load_predictions()
+        return df[(df.drug == drug) & (df.condition == condition)]
+    return _placeholder_pair(drug, condition)
+
+
+@st.cache_data(show_spinner="Loading Druglib reviews...")
+def load_druglib():
+    from core import druglib
+    return druglib.load()
 
 
 def highlight(text, span):

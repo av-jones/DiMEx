@@ -14,6 +14,36 @@ BAND_COLORS = {"Mild": MILD, "Calm": MILD, "Moderate": MOD, "Distressing": DIST,
 ASPECT_COLORS = {"effectiveness": POS, "side_effect": NEG, "satisfaction": NEU}
 
 
+def compare_bar(patient, model, scale):
+    """The patient's rating and the model's prediction as two markers on one 1..scale track,
+    joined by a line whose length is the disagreement. Patient = navy square, model = blue circle."""
+    def pct(x):
+        return (x - 1) / (scale - 1) * 100
+    lo, hi = sorted([pct(patient), pct(model)])
+    ticks = range(1, scale + 1) if scale == 5 else [1, 4, 7, 10]
+    tick_html = "".join(f"<span>{t}</span>" for t in ticks)
+    return f"""
+<div role="img" aria-label="Patient {patient:g}, model {model:.1f}, out of {scale}" style="margin:10px 0 2px">
+  <div style="position:relative;height:6px;background:{SOFT};border-radius:3px">
+    <div style="position:absolute;left:{lo:.1f}%;width:{hi - lo:.1f}%;top:0;bottom:0;background:#9DB7E0;
+                border-radius:3px"></div>
+    <div title="Patient" style="position:absolute;left:calc({pct(patient):.1f}% - 7px);top:-4px;width:14px;
+                height:14px;background:{NEG};border-radius:3px"></div>
+    <div title="DiMEx" style="position:absolute;left:calc({pct(model):.1f}% - 7px);top:-4px;width:14px;height:14px;
+                border-radius:50%;background:#fff;border:3px solid {POS};box-sizing:border-box"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;
+              color:{MUTED};margin-top:6px">{tick_html}</div>
+</div>"""
+
+
+COMPARE_KEY = (f'<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">'
+               f'<span style="width:12px;height:12px;background:{NEG};border-radius:3px"></span>Patient\'s rating</span>'
+               f'<span style="display:inline-flex;align-items:center;gap:6px">'
+               f'<span style="width:12px;height:12px;border-radius:50%;border:3px solid {POS};box-sizing:border-box">'
+               f'</span>DiMEx prediction</span>')
+
+
 def score_bar(value, scale, color):
     """A filled bar with a marker, on a 1..scale axis."""
     pct = (value - 1) / (scale - 1) * 100

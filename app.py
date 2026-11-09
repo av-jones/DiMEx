@@ -40,7 +40,9 @@ st.markdown(
         color: rgba(255, 255, 255, 0.78); font-size: 0.9rem; letter-spacing: 0.01em; z-index: 2;
     }}
     [data-testid="stToolbar"] {{ height: 64px; }}
-    [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: center; }}
+    /* Tabs start right after the name and tagline, so they never run into it */
+    [data-testid="stTopNav"] {{ flex: 1 1 auto; justify-content: flex-start; padding-left: 424px; }}
+    @media (max-width: 1180px) {{ [data-testid="stTopNav"] {{ padding-left: 110px; }} }}
     /* Tabs: full-height blocks; hovering shows a 5px white bar along the bottom of the block */
     [data-testid="stTopNavLink"] {{
         color: rgba(255, 255, 255, 0.85) !important; background: transparent !important;
@@ -213,17 +215,19 @@ if auth_on() and not signed_in():
     st.stop()
 
 DRUGS = st.Page("views/drug.py", title="Drugs", default=True)
+DRUGLIB = st.Page("views/druglib.py", title="Druglib", url_path="druglib")
 TRY = st.Page("views/demo.py", title="Try a review")
 CARD = st.Page("views/model_card.py", title="Model card", url_path="model-card")
 # Reached through "Open review" buttons only, so it has no tab
 REVIEW = st.Page("views/review.py", title="Review detail", visibility="hidden")
-page = st.navigation([DRUGS, TRY, CARD, REVIEW], position="top")
+page = st.navigation([DRUGS, DRUGLIB, TRY, CARD, REVIEW], position="top")
 
 page.run()
 
 # Phones: a bottom tab bar with icons replaces the top links (CSS shows it below 760px only)
 with st.container(key="bottom_nav", horizontal=True):
     for target, label, icon in [(DRUGS, "Drugs", ":material/medication:"),
+                                (DRUGLIB, "Druglib", ":material/compare_arrows:"),
                                 (TRY, "Try a review", ":material/rate_review:"),
                                 (CARD, "Model card", ":material/fact_check:")]:
         on = page.url_path == target.url_path

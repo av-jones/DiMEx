@@ -5,6 +5,7 @@ before training is done. Replace them with:
   - predictions.parquet: batch-scored Drugs.com reviews (see scripts/batch_score.py)
   - Druglib's real test split for the model check page
 """
+import functools
 import math
 import random
 import zlib
@@ -177,7 +178,7 @@ def load_pairs():
     """Drug-condition pairs with review counts, most reviewed first.
     Real predictions if they exist; else the real Drugs.com names and counts (assets/drugscom_pairs.csv);
     else the small built-in placeholder set."""
-    if PRED_PATH.exists():
+    if has_predictions():
         return pair_counts(load_predictions())
     if PAIRS_PATH.exists():
         return pd.read_csv(PAIRS_PATH)
@@ -186,7 +187,7 @@ def load_pairs():
 
 def pair_predictions(drug, condition):
     """Predictions for one drug-condition pair: real ones if they exist, else placeholder reviews scored now."""
-    if PRED_PATH.exists():
+    if has_predictions():
         df = load_predictions()
         return df[(df.drug == drug) & (df.condition == condition)]
     pairs = load_pairs()
@@ -195,10 +196,24 @@ def pair_predictions(drug, condition):
                        [APP_MODEL])
 
 
-def load_predictions():
-    """Predictions from the app's model: data/predictions.parquet if it exists, else placeholders."""
+@functools.lru_cache(maxsize=1)          # looked up once per server process
+def _pred_file():
+    """Real Drugs.com predictions: data/predictions.parquet, else the private data repo; None if neither."""
     if PRED_PATH.exists():
-        df = pd.read_parquet(PRED_PATH)
+        return PRED_PATH
+    from core.settings import hf_file
+    return hf_file("predictions.parquet")
+
+
+def has_predictions():
+    return _pred_file() is not None
+
+
+def load_predictions():
+    """Predictions from the app's model: the real ones if available, else placeholders."""
+    path = _pred_file()
+    if path:
+        df = pd.read_parquet(path)
         return df[df.model == APP_MODEL] if APP_MODEL in set(df.model) else df
     return batch_score(fake_reviews(), [APP_MODEL])
 

@@ -25,6 +25,13 @@ MODELS = {
     "ClinicalBERT": {"hf_id": "emilyalsentzer/Bio_ClinicalBERT", "ckpt": None,
                      "domain": "Clinical notes (MIMIC-III)"},
 }
+# A trained checkpoint set in the deployment settings (core/settings.py) takes precedence over the table
+from core.settings import setting  # noqa: E402
+
+_ckpt = setting("DIMEX_CHECKPOINT")
+if _ckpt:
+    MODELS[setting("DIMEX_MODEL", "RoBERTa")]["ckpt"] = _ckpt
+
 MODEL_NAMES = list(MODELS)
 USE_FAKE = all(cfg["ckpt"] is None for cfg in MODELS.values())
 
@@ -35,7 +42,8 @@ def is_real(name):
 
 
 # The one model the app uses: the first trained model above, or RoBERTa until one is connected.
-APP_MODEL = next((m for m in MODEL_NAMES if is_real(m)), "RoBERTa")
+APP_MODEL = setting("DIMEX_MODEL") if _ckpt else next((m for m in MODEL_NAMES if is_real(m)), "RoBERTa")
+APP_MODEL = APP_MODEL or "RoBERTa"
 
 
 class AspectScorer:
@@ -51,8 +59,10 @@ class AspectScorer:
 
         self.torch = torch
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.tok = AutoTokenizer.from_pretrained(ckpt)
-        self.model = AutoModelForSequenceClassification.from_pretrained(ckpt).to(self.device).eval()
+        token = setting("HF_TOKEN")                 # needed for a private repo
+        self.tok = AutoTokenizer.from_pretrained(ckpt, token=token)
+        self.model = (AutoModelForSequenceClassification.from_pretrained(ckpt, token=token)
+                      .to(self.device).eval())
         import inspect
         self.inputs = set(inspect.signature(self.model.forward).parameters)   # ModernBERT: no token_type_ids
 

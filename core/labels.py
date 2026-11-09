@@ -53,6 +53,8 @@ _CHIP_TONES = {
     "Severe side effects": "bad", "Extremely severe side effects": "bad",
     "Satisfied": "good", "Mixed": "neutral", "Dissatisfied": "bad",
 }
+_CHIP_TONES.update({"Close match": "good", "Some disagreement": "warn", "Big disagreement": "bad"})
+
 _TONE_STYLE = {                     # (text, background)
     "good": ("#1A4F9C", "#E3ECFA"),
     "neutral": ("#3E4652", "#EDF0F4"),

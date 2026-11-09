@@ -2,7 +2,8 @@
 import streamlit as st
 
 from core.registry import APP_MODEL, MODELS, is_real
-from core.ui import card
+from core.druglib import metrics
+from core.ui import card, load_druglib
 
 st.title("Model card")
 st.caption("What the DiMEx model is, how it was trained and tested, and what it shouldn't be used for")
@@ -14,7 +15,7 @@ with card():
 
 if not is_real(APP_MODEL):
     st.info("This copy of the app is running on placeholder scores while the trained checkpoint is connected. "
-            "The results below are from the training runs.")
+            "The Drugs.com results below are from the training runs.")
 
 left, right = st.columns(2, gap="large")
 with left:
@@ -48,8 +49,27 @@ with card():
 - The DimABSA step **improved Drugs.com transfer by 2–6 points** across encoders.
 - General-purpose encoders beat biomedical ones (BioBERT, BioRedditBERT) by **10+ points** on Drugs.com.
 - On Druglib itself, the DimABSA step **slightly hurt** effectiveness and side-effect scores, so those two are best read alongside the review text.
-- MAE, RMSE and accuracy are reported in the project paper.
 """)
+
+# Druglib test split: computed from the same predictions the Druglib page shows
+dl, dl_source = load_druglib()
+with card():
+    st.subheader("Druglib test set: error on the patient's own scales")
+    if dl_source == "trained":
+        st.caption(f"{len(dl):,} reviews, each field scored by {APP_MODEL}. MAE and RMSE are in rating points "
+                   "(lower is better); 3-class accuracy and kappa use Gräßer et al.'s (2018) classes.")
+    else:
+        st.caption("Placeholder numbers from the stand-in scorer"
+                   + (" on a few example reviews" if dl_source == "examples" else "")
+                   + ". They update automatically once the trained model's Druglib predictions are connected.")
+    table = metrics(dl)
+    st.dataframe(table, hide_index=True, width="stretch",
+                 column_config={"MAE": st.column_config.NumberColumn(format="%.2f"),
+                                "RMSE": st.column_config.NumberColumn(format="%.2f"),
+                                "Within 1 point": st.column_config.NumberColumn(format="percent"),
+                                "3-class accuracy": st.column_config.NumberColumn(format="percent"),
+                                "Kappa": st.column_config.NumberColumn(format="%.2f")})
+    st.page_link("views/druglib.py", label="See every review next to its prediction", icon=":material/arrow_forward:")
 
 left, right = st.columns(2, gap="large")
 with left:

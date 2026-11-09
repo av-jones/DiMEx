@@ -106,3 +106,22 @@ Locally, the same lines go in `.streamlit/secrets.toml` (git-ignored).
 The Drugs page greets viewers ("Good afternoon, Athlene") in their own time zone. The name comes from an
 optional `[names]` table in secrets, e.g. `"athlenevjones@gmail.com" = "AV"`; otherwise it's guessed from
 addresses like first.last@..., and with no name the greeting is just "Good afternoon".
+
+## Connecting the trained model (private)
+
+Nothing private goes in this repo. The app reads these settings from Streamlit Cloud's secrets
+(App settings → Secrets); see `core/settings.py`:
+
+```toml
+HF_TOKEN = "hf_..."                              # Hugging Face READ token
+DIMEX_MODEL = "RoBERTa"                          # registry entry the app uses
+DIMEX_CHECKPOINT = "your-hf-username/dimex-roberta"   # private model repo
+DIMEX_DATA_REPO = "your-hf-username/dimex-data"       # private dataset repo
+```
+
+Make the model and data repos with the notebook's sections 9 and 10 (they push the checkpoint, score
+all Drugs.com reviews and the Druglib test split, and upload `predictions.parquet` and
+`druglib_predictions.parquet`). Until these are set, every page runs on placeholder scores and says so.
+
+The Druglib page loads the test split from the data repo, or downloads it from UCI at runtime;
+review text is never committed here.

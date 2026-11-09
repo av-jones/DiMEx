@@ -2,7 +2,7 @@ import streamlit as st
 
 from core.data import mentions
 from core.labels import chip
-from core.ui import card, highlight, load_pairs, pair_predictions
+from core.ui import card, highlight, load_pairs, pair_predictions, review_box, serious_flag
 
 # Reviews from the drug and condition the visitor came from (else the most-reviewed pair)
 pair = st.session_state.get("review_pair") or tuple(load_pairs().iloc[0][["drug", "condition"]])
@@ -22,7 +22,10 @@ st.page_link("views/drug.py", label=f"{first.drug} for {first.condition.lower()}
 main, side = st.columns([3, 1.3], gap="large")
 
 with main:
-    with card():
+    flag, _ = serious_flag(first.text)
+    with review_box(first.text, f"detail_{first.review_id}"):
+        if flag:
+            st.markdown(flag, unsafe_allow_html=True)
         st.caption(f"Drugs.com review · {first.condition}")
         st.metric("Patient's star rating", f"{first.rating}/10")
         text = first.text

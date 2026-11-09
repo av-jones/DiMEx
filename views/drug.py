@@ -8,7 +8,7 @@ from core.data import summarize
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.data import MIN_REVIEWS
-from core.ui import card, highlight, load_pairs, pair_predictions, scroll_to
+from core.ui import card, highlight, load_pairs, pair_predictions, review_box, scroll_to, serious_flag
 from core.viz import (EFFECT_GROUPS, MUTED, SIDE_GROUPS, breakdown, group_legend,
                       intensity_gauge, share_bars, split_tag, stacked, star_rating, stars_vs_model, va_map)
 
@@ -150,10 +150,11 @@ def show(drug, condition):
 
 
     def quote_card(text, span, chip_label, meta, review_id, key):
-        with card():
+        flag, _ = serious_flag(text)
+        with review_box(text, key):                 # red block if it mentions a serious event
             st.markdown(highlight(text, span) if span else text.replace("$", r"\$"))
             left, right = st.columns([4, 1], vertical_alignment="center")
-            left.markdown(f"{chip(chip_label) if chip_label else ''} {meta}", unsafe_allow_html=True)
+            left.markdown(f"{flag} {chip(chip_label) if chip_label else ''} {meta}", unsafe_allow_html=True)
             if right.button("Open review", key=key):
                 st.session_state.review_id = int(review_id)
                 st.switch_page("views/review.py")
@@ -205,8 +206,21 @@ def show(drug, condition):
 
         with card():
             st.subheader("What patients say about side effects")
+            # Reviews that mention a serious event always come first, whatever their scores
+            whole = preds[preds.scope == "review"].drop_duplicates("review_id")
+            flagged = whole[whole.text.map(lambda t: serious_flag(t)[1])]
+            if len(flagged):
+                st.markdown(f"<div class='serious-note'>⚠ <b>{len(flagged)}</b> of {s['n']:,} reviews mention a "
+                            "serious event (such as suicidal thoughts, seizures or a hospital visit). "
+                            "They are shown first; read them in full.</div>", unsafe_allow_html=True)
             st.caption("Most severe first")
+            shown_ids = set()
+            for r in flagged.head(3).itertuples():
+                shown_ids.add(r.review_id)
+                quote_card(r.text, None, None, f"Rated {r.rating}/10", r.review_id, f"open-serious-{r.review_id}")
             for q in s["quotes"]:
+                if q.review_id in shown_ids:
+                    continue
                 quote_card(q.text, q.span, q.label, f"{q.aspect} · Rated {q.rating}/10", q.review_id,
                            f"open-side-{q.review_id}-{q.aspect}")
 

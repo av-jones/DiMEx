@@ -76,3 +76,20 @@ def scroll_to(class_name):
     else:
         import streamlit.components.v1 as components
         components.html(html, height=0)
+
+
+def serious_flag(text):
+    """('⚠ Serious event mentioned' tag HTML, True) if the text mentions a serious event, else ('', False)."""
+    import html
+    from core.aspects import serious_mentions
+    found = sorted(set(serious_mentions(text)))
+    if not found:
+        return "", False
+    return (f"<span class='serious-flag' title='Mentions: {html.escape(', '.join(found))}'>"
+            "⚠ Serious event mentioned</span>", True)
+
+
+def review_box(text, key):
+    """A card for one review: red-outlined and tinted when the review mentions a serious event."""
+    _, serious = serious_flag(text)
+    return st.container(border=True, key=f"serious_{key}") if serious else card()

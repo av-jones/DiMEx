@@ -3,7 +3,7 @@ import streamlit as st
 from core.data import summarize
 from core.labels import chip
 from core.registry import APP_MODEL
-from core.ui import card, highlight, load_predictions
+from core.ui import card, highlight, load_predictions, scroll_to
 from core.viz import (BAND_COLORS, EFFECT_GROUPS, MUTED, SIDE_GROUPS, breakdown, group_legend,
                       intensity_gauge, share_bars, split_tag, stacked, star_rating, stars_vs_model, va_map)
 
@@ -64,6 +64,7 @@ for col, (kind, name, sub) in zip(cols, TILES):
         # An invisible button covers the whole box (CSS in app.py), so the box itself is clickable
         if st.button(f"Show {name.lower()} details", key=f"select_{kind}"):
             st.session_state.metric = kind
+            st.session_state.scroll_to_details = True
             st.rerun()
         t = s["tiles"].get(kind)
         if not t:
@@ -87,13 +88,17 @@ for col, (kind, name, sub) in zip(cols, TILES):
 def quote_card(text, span, chip_label, meta, review_id, key):
     with card():
         st.markdown(highlight(text, span) if span else text.replace("$", r"\$"))
-        st.markdown(f"{chip(chip_label) if chip_label else ''} {meta}", unsafe_allow_html=True)
-        if st.button("Open review", key=key):
+        left, right = st.columns([4, 1], vertical_alignment="center")
+        left.markdown(f"{chip(chip_label) if chip_label else ''} {meta}", unsafe_allow_html=True)
+        if right.button("Open review", key=key):
             st.session_state.review_id = int(review_id)
             st.switch_page("views/review.py")
 
 
-st.markdown(f"<h2 style='margin:12px 0 0'>{NAMES[selected]}: details</h2>", unsafe_allow_html=True)
+st.markdown(f"<h2 class='metric-details' style='margin:12px 0 0;scroll-margin-top:84px'>{NAMES[selected]}: details</h2>",
+            unsafe_allow_html=True)
+if st.session_state.pop("scroll_to_details", False):
+    scroll_to("metric-details")
 
 # ---------------------------------------------------------------- side effects
 if selected == "side_effect":
@@ -143,11 +148,9 @@ if selected == "side_effect":
     with card():
         st.subheader("What patients say about side effects")
         st.caption("Most severe first")
-        qcols = st.columns(len(s["quotes"]) or 1)
-        for qcol, q in zip(qcols, s["quotes"]):
-            with qcol:
-                quote_card(q.text, q.span, q.label, f"{q.aspect} · Rated {q.rating}/10", q.review_id,
-                           f"open-side-{q.review_id}-{q.aspect}")
+        for q in s["quotes"]:
+            quote_card(q.text, q.span, q.label, f"{q.aspect} · Rated {q.rating}/10", q.review_id,
+                       f"open-side-{q.review_id}-{q.aspect}")
 
 # ---------------------------------------------------------------- effectiveness
 elif selected == "effectiveness" and "eff_dots" in s:
@@ -170,13 +173,11 @@ elif selected == "effectiveness" and "eff_dots" in s:
 
     with card():
         st.subheader("What patients say about how well it worked")
-        best_col, worst_col = st.columns(2, gap="large")
-        for col_, title, rows in [(best_col, "Worked best", s["eff_best"]), (worst_col, "Worked least", s["eff_worst"])]:
-            with col_:
-                st.markdown(f"<div class='group-head'>{title}</div>", unsafe_allow_html=True)
-                for r in rows.itertuples():
-                    quote_card(r.text, r.span, r.label, f"Rated {r.stars}/10", r.review_id,
-                               f"open-eff-{title}-{r.review_id}")
+        for title, rows in [("Worked best", s["eff_best"]), ("Worked least", s["eff_worst"])]:
+            st.markdown(f"<div class='group-head'>{title}</div>", unsafe_allow_html=True)
+            for r in rows.itertuples():
+                quote_card(r.text, r.span, r.label, f"Rated {r.stars}/10", r.review_id,
+                           f"open-eff-{title}-{r.review_id}")
 
 # ---------------------------------------------------------------- satisfaction
 elif selected == "satisfaction" and "sat_points" in s:
@@ -207,13 +208,10 @@ elif selected == "satisfaction" and "sat_points" in s:
 
     with card():
         st.subheader("What patients say overall")
-        best_col, worst_col = st.columns(2, gap="large")
-        for col_, title, rows in [(best_col, "Most satisfied", s["sat_best"]),
-                                  (worst_col, "Least satisfied", s["sat_worst"])]:
-            with col_:
-                st.markdown(f"<div class='group-head'>{title}</div>", unsafe_allow_html=True)
-                for r in rows.itertuples():
-                    quote_card(r.text, None, r.label, f"Rated {r.stars}/10", r.review_id,
-                               f"open-sat-{title}-{r.review_id}")
+        for title, rows in [("Most satisfied", s["sat_best"]), ("Least satisfied", s["sat_worst"])]:
+            st.markdown(f"<div class='group-head'>{title}</div>", unsafe_allow_html=True)
+            for r in rows.itertuples():
+                quote_card(r.text, None, r.label, f"Rated {r.stars}/10", r.review_id,
+                           f"open-sat-{title}-{r.review_id}")
 else:
     st.caption("Details need predictions that include whole-review scores.")

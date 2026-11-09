@@ -29,3 +29,19 @@ def card(parent=None):
     n = st.session_state.get("_card_n", 0)
     st.session_state["_card_n"] = n + 1
     return (parent or st).container(border=True, key=f"card_{n}")
+
+
+def scroll_to(class_name):
+    """Smoothly scroll the page to the first element with this class after this run renders. Streamlit has no
+    scroll API, so a zero-height component runs a small script against the app page."""
+    import time
+    import streamlit.components.v1 as components
+    components.html(f"""<script>
+      // {time.time()}  (unique text so the script runs on every request)
+      const go = (tries) => {{
+        const el = window.parent.document.querySelector(".{class_name}");
+        if (el) el.scrollIntoView({{behavior: "smooth", block: "start"}});
+        else if (tries > 0) setTimeout(() => go(tries - 1), 100);
+      }};
+      setTimeout(() => go(30), 150);
+    </script>""", height=0)

@@ -32,9 +32,8 @@ left, right = st.columns(2, gap="medium")
 with left, st.container(border=True, key="dl_panel_close", height="stretch"):
     st.subheader("How close DiMEx gets")
     st.caption(f"Druglib test set · {len(df):,} reviews, each compared with the patient's own ratings. "
-               "Arrows show which way is better; hover a bar for details.")
-    rows = [{**r, "scale_max": int(r["Scale"].split("–")[1])} for r in m.to_dict("records")]
-    st.markdown(accuracy_grid(rows), unsafe_allow_html=True)
+               "Lower gap is better; higher share and agreement are better. Hover a number for details.")
+    st.markdown(accuracy_grid(m.to_dict("records")), unsafe_allow_html=True)
 
 with right, st.container(border=True, key="dl_panel_browse", height="stretch"):
     st.subheader("Browse reviews")

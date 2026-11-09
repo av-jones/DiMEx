@@ -164,12 +164,7 @@ st.markdown(
     .acc-grid .acc-h:first-child {{ border-bottom-color: rgba(255, 255, 255, 0.18); }}
     .acc-name {{ color: #FFFFFF; font-weight: 600; font-size: 15px; line-height: 1.25; }}
     .acc-name span {{ display: block; font-weight: 400; font-size: 12px; color: rgba(255, 255, 255, 0.65); }}
-    .acc-cell {{ display: flex; align-items: center; gap: 8px; cursor: default; }}
-    .acc-track {{ flex: 1; height: 8px; background: rgba(255, 255, 255, 0.12); border-radius: 4px; overflow: hidden; }}
-    .acc-fill {{ height: 100%; background: #8FB4F0; border-radius: 0 4px 4px 0; }}
-    .acc-cell:hover .acc-fill {{ background: #B7D0F7; }}
-    .acc-val {{ font-family: "IBM Plex Mono", monospace; font-size: 14px; color: #FFFFFF; min-width: 38px;
-                text-align: right; }}
+    .acc-val {{ font-family: "IBM Plex Mono", monospace; font-size: 22px; color: #FFFFFF; cursor: default; }}
     @media (max-width: 760px) {{ .acc-grid {{ grid-template-columns: 1fr; gap: 6px; }} .acc-h {{ display: none; }} }}
     .dl-part {{ display: grid; grid-template-columns: 2fr 1fr; gap: 8px 40px; align-items: center;
                 padding: 14px 0 10px; border-top: 1px solid #E3E8EF; }}

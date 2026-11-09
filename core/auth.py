@@ -10,11 +10,10 @@ Locally, put it in .streamlit/secrets.toml (git-ignored); on Streamlit Cloud, in
 """
 import time
 
-import bcrypt
 import streamlit as st
 
-# Checked when an email isn't on the list, so a wrong email takes as long as a wrong password
-_DUMMY = bcrypt.hashpw(b"not-a-real-password", bcrypt.gensalt())
+# bcrypt is imported only when someone signs in with this app's own form, so the app still runs
+# (e.g. as a private Streamlit Cloud app) even where bcrypt isn't installed.
 MAX_TRIES = 5          # per browser session, then a pause before the next try
 
 
@@ -26,8 +25,11 @@ def _users():
 
 
 def _check(email, password):
+    import bcrypt
     stored = _users().get(email.strip().lower())
-    ok = bcrypt.checkpw(password.encode(), (stored or _DUMMY.decode()).encode())
+    # An unknown email is checked against a throwaway hash, so it takes as long as a wrong password
+    dummy = bcrypt.hashpw(b"not-a-real-password", bcrypt.gensalt()).decode()
+    ok = bcrypt.checkpw(password.encode(), (stored or dummy).encode())
     return ok and stored is not None
 
 

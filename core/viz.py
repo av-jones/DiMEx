@@ -59,6 +59,43 @@ def star_rating(value, scale, kind, size=22):
 </div>"""
 
 
+BREAKDOWN_SHORT = {
+    "Highly effective": "Highly effective", "Considerably effective": "Considerably",
+    "Moderately effective": "Moderately", "Marginally effective": "Marginally", "Ineffective": "Ineffective",
+    "No side effects": "None", "Mild side effects": "Mild", "Moderate side effects": "Moderate",
+    "Severe side effects": "Severe", "Extremely severe side effects": "Extremely severe",
+    "Satisfied": "Satisfied (7–10)", "Mixed": "Mixed (5–6)", "Dissatisfied": "Dissatisfied (1–4)",
+}
+BREAKDOWN_COLORS = {
+    "No side effects": MILD, "Mild side effects": MILD, "Moderate side effects": MOD,
+    "Severe side effects": DIST, "Extremely severe side effects": DIST,
+    "Satisfied": POS, "Mixed": NEU, "Dissatisfied": NEG,
+}
+
+
+def breakdown(rows):
+    """Bars for the share of reviews at each level: rows = [(level name, share 0-1), ...]."""
+    out = []
+    for name, share in rows:
+        color = BREAKDOWN_COLORS.get(name, POS)
+        out.append(
+            f'<div style="display:grid;grid-template-columns:118px 1fr 38px;align-items:center;gap:8px;margin:5px 0">'
+            f'<span style="font-size:12px;color:#3E4652;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+            f'{BREAKDOWN_SHORT.get(name, name)}</span>'
+            f'<div role="img" aria-label="{share:.0%} of reviews" style="height:9px;background:{SOFT};'
+            f'border-radius:5px;overflow:hidden"><div style="height:100%;width:{share * 100:.0f}%;'
+            f'background:{color};border-radius:5px"></div></div>'
+            f'<span style="font-size:12px;color:{MUTED};text-align:right">{share:.0%}</span></div>')
+    return '<div style="margin-top:6px">' + "".join(out) + "</div>"
+
+
+def split_tag(kind):
+    word = "Split experiences" if kind == "side_effect" else "Split opinions"
+    return (f'<span title="Many reviews at both ends: the average hides a disagreement" '
+            f'style="font-size:11px;font-weight:600;color:#6B4A00;background:#FCEFC7;border-radius:999px;'
+            f'padding:2px 8px;margin-left:8px;white-space:nowrap">{word}</span>')
+
+
 def intensity_gauge(arousal, kind="side_effect", size=200, caption=None):
     """A half-circle gauge for intensity (arousal, 1-9): a needle over three bands, calm to intense.
     Band edges match the intensity words (core.explain.INTENSITY_CUTS)."""

@@ -4,7 +4,8 @@ from core.data import summarize
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.ui import card, highlight, load_predictions
-from core.viz import BAND_COLORS, MUTED, intensity_gauge, legend, stacked, star_rating, va_map
+from core.viz import (BAND_COLORS, MUTED, breakdown, intensity_gauge, legend, split_tag, stacked,
+                     star_rating, va_map)
 
 TILES = [("effectiveness", "Effectiveness", "How well it worked, from review text"),
          ("side_effect", "Side effects", "How bad, from review text (higher = worse)"),
@@ -41,10 +42,12 @@ for col, (kind, name, sub) in zip(cols, TILES):
         a.markdown(f"**{name}**")
         b.markdown(chip(t["label"]), unsafe_allow_html=True)
         st.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:30px'>{t['mean']:.1f}</span> "
-                    f"<span style='color:{MUTED}'>/ {t['scale']} avg</span>", unsafe_allow_html=True)
+                    f"<span style='color:{MUTED}'>/ {t['scale']} avg</span>"
+                    + (split_tag(kind) if t["split"] else ""), unsafe_allow_html=True)
         st.markdown(star_rating(t["mean"], t["scale"], kind), unsafe_allow_html=True)
+        st.markdown(breakdown(t["breakdown"]), unsafe_allow_html=True)
         extra = f" Average stars: {s['avg_stars']:.1f}." if kind == "satisfaction" else ""
-        st.caption(sub + "." + extra)
+        st.caption(sub + ". Bars: share of reviews at each level." + extra)
 
 main, side = st.columns([1.7, 1], gap="large")
 

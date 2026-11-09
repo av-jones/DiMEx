@@ -112,6 +112,25 @@ def load_predictions():
     return batch_score(fake_reviews(), [APP_MODEL])
 
 
+# Levels for each aspect's breakdown, best first (side effects: none first)
+BREAKDOWN_LEVELS = {
+    "effectiveness": ["Highly effective", "Considerably effective", "Moderately effective",
+                      "Marginally effective", "Ineffective"],
+    "side_effect": ["No side effects", "Mild side effects", "Moderate side effects",
+                    "Severe side effects", "Extremely severe side effects"],
+    "satisfaction": ["Satisfied", "Mixed", "Dissatisfied"],
+}
+SPLIT_SHARE = 0.30     # both ends this common -> reviews disagree
+
+
+def _is_split(kind, levels):
+    """True when reviews cluster at both ends, so the average hides a disagreement."""
+    names = BREAKDOWN_LEVELS[kind]
+    top, bottom = (names[:2], names[-2:]) if kind != "satisfaction" else (names[:1], names[-1:])
+    return (sum(levels.get(n, 0) for n in top) >= SPLIT_SHARE
+            and sum(levels.get(n, 0) for n in bottom) >= SPLIT_SHARE)
+
+
 def _bands(arousal):
     bands = pd.Series([intensity_band(a, "side_effect") for a in arousal], dtype=object)
     shares = bands.value_counts(normalize=True)
@@ -138,7 +157,10 @@ def summarize(df, drug, condition, model):
         g = whole[whole.kind == kind]
         if len(g):
             mean = float(g.score.mean())
-            tiles[kind] = {"mean": mean, "scale": int(g.scale.iloc[0]), "label": rating_label(kind, mean)}
+            levels = pd.Series([rating_label(kind, x) for x in g.score]).value_counts(normalize=True)
+            breakdown = [(name, float(levels.get(name, 0.0))) for name in BREAKDOWN_LEVELS[kind]]
+            tiles[kind] = {"mean": mean, "scale": int(g.scale.iloc[0]), "label": rating_label(kind, mean),
+                           "breakdown": breakdown, "split": _is_split(kind, levels)}
 
     # Side-effect intensity: reviews whose whole-review side-effect score shows any side effects
     side_w = whole[(whole.kind == "side_effect") & (whole.score >= SIDE_EFFECT_PRESENT)]

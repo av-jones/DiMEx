@@ -241,4 +241,4 @@ def stars_vs_model(points, height=280):
     return (alt.layer(diag, dots).properties(height=height)
             .configure_view(stroke=LINE, fill="#F7F9FC")
             .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400,
-                            labelFontSize=14 if big else 11, titleFontSize=15 if big else 11))
+                            labelFontSize=11, titleFontSize=11))

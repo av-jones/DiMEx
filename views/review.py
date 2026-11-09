@@ -2,12 +2,14 @@ import streamlit as st
 
 from core.data import mentions
 from core.labels import chip
-from core.ui import card, highlight, load_predictions
+from core.ui import card, highlight, load_pairs, pair_predictions
 
-preds = mentions(load_predictions())   # keyword-found aspects; whole-review scores are on other pages
+# Reviews from the drug and condition the visitor came from (else the most-reviewed pair)
+pair = st.session_state.get("review_pair") or tuple(load_pairs().iloc[0][["drug", "condition"]])
+preds = mentions(pair_predictions(*pair))   # keyword-found aspects; whole-review scores are on other pages
 
 # Default: a high-rated review with a severe side effect, the most interesting case.
-if "review_id" not in st.session_state:
+if st.session_state.get("review_id") not in set(preds.review_id):
     flagged = preds[(preds.label == "Severe") & (preds.rating >= 9)]
     st.session_state.review_id = int((flagged if len(flagged) else preds).review_id.iloc[0])
 

@@ -16,8 +16,13 @@ def load_predictions():
 
 
 @st.cache_data
-def pair_counts(df):
-    return data.pair_counts(df)
+def load_pairs():
+    return data.load_pairs()
+
+
+@st.cache_data(show_spinner=False, max_entries=64)
+def pair_predictions(drug, condition):
+    return data.pair_predictions(drug, condition)
 
 
 def highlight(text, span):

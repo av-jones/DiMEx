@@ -4,7 +4,7 @@ from core.data import summarize
 from core.labels import chip
 from core.registry import APP_MODEL
 from core.data import MIN_REVIEWS
-from core.ui import card, highlight, load_predictions, pair_counts, scroll_to
+from core.ui import card, highlight, load_pairs, pair_predictions, scroll_to
 from core.viz import (EFFECT_GROUPS, MUTED, SIDE_GROUPS, breakdown, group_legend,
                       intensity_gauge, share_bars, split_tag, stacked, star_rating, stars_vs_model, va_map)
 
@@ -13,7 +13,6 @@ TILES = [("effectiveness", "Effectiveness", "How well it worked, from review tex
          ("satisfaction", "Satisfaction", "The model's estimate from review text")]
 NAMES = {kind: name for kind, name, _ in TILES}
 
-preds = load_predictions()
 model = APP_MODEL
 
 # Pickers for thousands of drugs and conditions. Two ways in:
@@ -22,7 +21,7 @@ model = APP_MODEL
 # Both menus are type-to-search, sorted by review count, and only list pairs with at least
 # MIN_REVIEWS reviews (fewer is too thin to summarize).
 ss = st.session_state
-counts = pair_counts(preds)                                   # drug, condition, n; most reviews first
+counts = load_pairs()                                         # drug, condition, n; most reviews first
 COND_N = counts.groupby("condition").n.sum().sort_values(ascending=False)
 DRUG_N = counts.groupby("drug").n.sum().sort_values(ascending=False)
 PAIR_N = counts.set_index(["drug", "condition"]).n
@@ -98,9 +97,12 @@ with st.container(key="picker_band"):
 
 def show(drug, condition):
     """The drug page for one drug-condition pair."""
+    with st.spinner("Loading reviews..."):
+        preds = pair_predictions(drug, condition)
+    st.session_state.review_pair = (drug, condition)       # the review page opens reviews from this pair
     s = summarize(preds, drug, condition, model)
     st.title(drug)
-    st.caption(f"For {condition.lower()} · {s['n']:,} reviews analyzed · Source: Drugs.com · "
+    st.caption(f"For {condition.lower()} · {PAIR_N[drug, condition]:,} reviews · Source: Drugs.com · "
                "Click a box to see its details")
 
     # ---- the three metric boxes; clicking one opens its details below (selection kept in session state)

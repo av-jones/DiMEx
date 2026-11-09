@@ -79,7 +79,6 @@ st.markdown(
         .st-key-bottom_nav > [data-testid="stLayoutWrapper"] {{ flex: 1 1 0 !important; min-width: 0 !important; }}
         [class*="st-key-bnav_"], [class*="st-key-bnav_"] [data-testid="stElementContainer"],
         [class*="st-key-bnav_"] [data-testid="stPageLink"] {{ width: 100% !important; }}
-        .st-key-picker_band {{ margin-top: -40px !important; }}           /* sit flush under the header */
         [class*="st-key-bnav_"] a {{
             display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
             padding: 6px 2px !important; border-radius: 10px; background: transparent !important;
@@ -196,6 +195,8 @@ CARD = st.Page("views/model_card.py", title="Model card", url_path="model-card")
 REVIEW = st.Page("views/review.py", title="Review detail", visibility="hidden")
 page = st.navigation([DRUGS, TRY, CARD, REVIEW], position="top")
 
+page.run()
+
 # Phones: a bottom tab bar with icons replaces the top links (CSS shows it below 760px only)
 with st.container(key="bottom_nav", horizontal=True):
     for target, label, icon in [(DRUGS, "Drugs", ":material/medication:"),
@@ -204,8 +205,6 @@ with st.container(key="bottom_nav", horizontal=True):
         on = page.url_path == target.url_path
         with st.container(key=f"bnav_{target.url_path or 'home'}_{'on' if on else 'off'}"):
             st.page_link(target, label=label, icon=icon)
-
-page.run()
 
 st.markdown(
     """

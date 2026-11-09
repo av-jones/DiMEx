@@ -188,7 +188,7 @@ st.markdown(
 
 st.session_state["_card_n"] = 0        # card keys restart at card_0 on every run (core.ui.card)
 
-from core.auth import auth_on, login_page, sign_out, signed_in  # noqa: E402
+from core.auth import auth_on, login_page, sign_out, signed_in, viewer_email  # noqa: E402
 
 FOOTER = """
     <div class="dimex-footer">
@@ -223,9 +223,13 @@ with st.container(key="bottom_nav", horizontal=True):
         with st.container(key=f"bnav_{target.url_path or 'home'}_{'on' if on else 'off'}"):
             st.page_link(target, label=label, icon=icon)
 
-if auth_on():
+# Who's signed in: this app's sign-in, or Streamlit Cloud's on a private app (see core.auth.viewer_email)
+VIEWER = viewer_email()
+if VIEWER:
     with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", key="signout_row"):
-        st.caption("Signed in as " + st.session_state.user.replace("@", "@\u200b"))   # zero-width space: not a link
-        st.button("Sign out", key="signout", on_click=sign_out, type="tertiary")
+        st.caption(":material/account_circle: Signed in as "
+                   + VIEWER.replace("@", "@\u200b"))                      # zero-width space: not a link
+        if auth_on():                       # Cloud's sign-in is ended from Streamlit, not from inside the app
+            st.button("Sign out", key="signout", on_click=sign_out, type="tertiary")
 
 st.markdown(FOOTER, unsafe_allow_html=True)

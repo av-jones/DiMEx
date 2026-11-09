@@ -36,6 +36,32 @@ def auth_on():
     return bool(_users())
 
 
+def viewer_email():
+    """Who is viewing, for display only (never for access decisions).
+    1. this app's own sign-in, if used
+    2. Streamlit Cloud's sign-in on a private app: Cloud passes the viewer in an X-Streamlit-User header.
+       That header is undocumented and may change, so if it's missing or unreadable this returns None."""
+    if st.session_state.get("user"):
+        return st.session_state.user
+    try:
+        raw = st.context.headers.get("X-Streamlit-User")
+    except Exception:
+        return None
+    if not raw:
+        return None
+    import base64
+    import json
+    for decode in (lambda v: v, lambda v: base64.b64decode(v + "=" * (-len(v) % 4)).decode()):
+        try:
+            info = json.loads(decode(raw))
+            email = info.get("email") if isinstance(info, dict) else None
+            if email:
+                return email
+        except Exception:
+            continue
+    return raw if "@" in raw and " " not in raw else None
+
+
 def signed_in():
     return bool(st.session_state.get("user"))
 

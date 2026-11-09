@@ -178,6 +178,9 @@ st.markdown(
     .big-head {{ font-size: 1.85rem !important; margin: 0 0 4px !important; padding: 0 !important; }}
     .big-note, .big-note * {{ font-size: 1.2rem !important; line-height: 1.6 !important; color: #3A4352; }}
     .big-note {{ margin: 0 0 8px !important; }}
+    .band-head [data-testid="stHeaderActionElements"] {{ display: none !important; }}   /* keeps it centered */
+    @media (max-width: 760px) {{ .band-head {{ font-size: clamp(1.1rem, 6.4vw, 1.45rem) !important; white-space: nowrap; }}
+                                  .st-key-picker_band {{ padding-left: 20px !important; padding-right: 20px !important; }} }}
     .band-sub {{ text-align: center; color: rgba(255, 255, 255, 0.88) !important; font-size: 1.05rem;
                  max-width: 720px; margin: 6px auto 12px !important; line-height: 1.5; }}
     .picker-note {{ text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 13px; margin-top: -4px; }}

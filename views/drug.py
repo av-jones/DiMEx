@@ -72,7 +72,7 @@ with st.container(key="picker_band"):
     with mid:
         name = viewer_name()
         st.markdown(f"<div class='band-greeting'>{html.escape(greeting() + (', ' + name if name else ''))}</div>"
-                    "<h3 style='text-align:center;margin:0'>Explore patient experiences</h3>"
+                    "<h3 class='band-head' style='text-align:center;margin:0'>Explore patient experiences</h3>"
                     "<p class='band-sub'>DiMEx rates each review for effectiveness, side effects and overall "
                     "satisfaction, and shows how negative or positive (valence) and how calm or intense "
                     "(arousal) each experience was.</p>",

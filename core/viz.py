@@ -160,6 +160,17 @@ _CORNERS = pd.DataFrame([
 ])
 
 
+# Quadrant tints: positive side light blue, negative side blue-grey, the intense (top) half a shade deeper,
+# so the four regions read clearly against a white plot
+_QUADS = pd.DataFrame([
+    {"v": 1, "v2": 5, "a": 5, "a2": 9, "fill": "#E6EAF2"},   # negative, intense
+    {"v": 1, "v2": 5, "a": 1, "a2": 5, "fill": "#F1F3F8"},   # negative, calm
+    {"v": 5, "v2": 9, "a": 5, "a2": 9, "fill": "#DFEBFB"},   # positive, intense
+    {"v": 5, "v2": 9, "a": 1, "a2": 5, "fill": "#EEF4FD"},   # positive, calm
+])
+AXIS_INK = "#3A4352"
+
+
 SIDE_GROUPS = (["Mild", "Moderate", "Distressing"], [MILD, MOD, DIST], "Intensity")
 EFFECT_GROUPS = (["Effective", "Moderate", "Not effective"], [POS, NEU, NEG], "Effectiveness")
 
@@ -176,15 +187,16 @@ def va_map(points=None, dots=None, height=330, groups=SIDE_GROUPS, big=False):
               axis=alt.Axis(values=[1, 3, 5, 7, 9], format="d", grid=False))
     mid = pd.DataFrame({"v": [5], "a": [5]})
     layers = [
-        alt.Chart(mid).mark_rule(strokeDash=[4, 4], color=LINE).encode(x="v:Q"),
-        alt.Chart(mid).mark_rule(strokeDash=[4, 4], color=LINE).encode(y="a:Q"),
+        alt.Chart(_QUADS).mark_rect().encode(x=x, x2="v2:Q", y=y, y2="a2:Q", color=alt.Color("fill:N", scale=None)),
+        alt.Chart(mid).mark_rule(strokeDash=[4, 4], color="#A3AEBE").encode(x="v:Q"),
+        alt.Chart(mid).mark_rule(strokeDash=[4, 4], color="#A3AEBE").encode(y="a:Q"),
     ]
     for align in ("left", "right"):
         layers.append(alt.Chart(_CORNERS[_CORNERS["align"] == align])
-                      .mark_text(align=align, fontSize=corner_px, color=MUTED).encode(x=x, y=y, text="t:N"))
+                      .mark_text(align=align, fontSize=corner_px, fontWeight=600, color=INK).encode(x=x, y=y, text="t:N"))
     if dots is not None and len(dots):
         col = "band" if "band" in dots else "group"
-        layers.append(alt.Chart(dots).mark_circle(size=dot_size, opacity=0.4).encode(
+        layers.append(alt.Chart(dots).mark_circle(size=dot_size, opacity=0.55, stroke="white", strokeWidth=0.6).encode(
             x=x, y=y,
             color=alt.Color(f"{col}:N", scale=alt.Scale(domain=groups[0], range=groups[1]), legend=None),
             tooltip=[alt.Tooltip(f"{col}:N", title=groups[2]), alt.Tooltip("v:Q", title="Valence", format=".1f"),
@@ -197,9 +209,9 @@ def va_map(points=None, dots=None, height=330, groups=SIDE_GROUPS, big=False):
                      alt.Tooltip("a:Q", title="Arousal", format=".1f")]))
         layers.append(alt.Chart(points).mark_text(align="left", dx=12, fontSize=12, fontWeight=600,
                                                   color=INK).encode(x=x, y=y, text="label:N"))
-    return (alt.layer(*layers).properties(height=height)
-            .configure_view(stroke=LINE, fill="#F7F9FC")
-            .configure_axis(labelColor=MUTED, titleColor=MUTED, domain=False, ticks=False, titleFontWeight=400,
+    return (alt.layer(*layers).properties(height=height).configure(background="#FFFFFF")
+            .configure_view(stroke=LINE, fill="#FFFFFF")
+            .configure_axis(labelColor=AXIS_INK, titleColor=AXIS_INK, domain=False, ticks=False, titleFontWeight=400,
                             labelFontSize=14 if big else 11, titleFontSize=15 if big else 11))
 
 

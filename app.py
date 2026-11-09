@@ -113,6 +113,8 @@ st.markdown(
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
     .band-greeting {{ text-align: center; color: rgba(255, 255, 255, 0.82); font-size: 1rem; font-weight: 500;
                       letter-spacing: .01em; margin-bottom: 2px; }}
+    /* Charts sit on white cards, so draw them on white (Streamlit paints them the page grey) */
+    [data-testid="stVegaLiteChart"] svg.marks {{ background-color: #FFFFFF !important; }}
     .big-head {{ font-size: 1.85rem !important; margin: 0 0 4px !important; padding: 0 !important; }}
     .big-note, .big-note * {{ font-size: 1.2rem !important; line-height: 1.6 !important; color: #3A4352; }}
     .big-note {{ margin: 0 0 8px !important; }}

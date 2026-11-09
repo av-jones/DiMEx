@@ -31,8 +31,8 @@ left, right = st.columns(2, gap="medium")
 # Both boxes are navy (styled by their keys in app.py)
 with left, st.container(border=True, key="dl_panel_close", height="stretch"):
     st.subheader("How close DiMEx gets")
-    st.caption(f"Druglib test set · {len(df):,} reviews. Average gap = mean absolute error (MAE) on the "
-               "patient's own scale; lower is better.")
+    st.caption(f"Druglib test set · {len(df):,} reviews. Average gap = mean absolute error (MAE): how many "
+               "rating points DiMEx is off from the patient, on average. Lower is better.")
     for r in m.itertuples():                       # one row per aspect: name, gap, detail
         a, b = st.columns([1, 1.25], vertical_alignment="center")
         a.markdown(f"**{r.Aspect}**  \n<span class='dl-muted' style='font-size:13px'>scale {r.Scale}</span>",
@@ -89,7 +89,8 @@ for r in sub.head(shown).itertuples():
             level = LEVEL_NAMES.get(k, {}).get(int(gold)) if gold == gold else None
             scores = (f"<span class='dl-scores'>Patient <b style='color:#1B2430'>{gold:g}</b>"
                       f"{' (' + level + ')' if level else ''} · DiMEx <b style='color:#1B2430'>{pred:.1f}</b>"
-                      f" · scale 1–{scale}</span>") if both else ""
+                      f" · <span title='Absolute error: how far DiMEx is from the patient, in rating points'>"
+                      f"off by <b style='color:#1B2430'>{abs(pred - gold):.1f}</b></span></span>") if both else ""
             quote = (f"<div class='dl-quote'>“{html.escape(text)}”</div>" if text
                      else f"<div class='dl-quote' style='color:{MUTED}'>No text for this part.</div>")
             # Left two thirds: what they wrote. Right third: patient vs. DiMEx on the scale.

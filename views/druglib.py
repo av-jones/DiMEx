@@ -22,27 +22,28 @@ if source == "placeholder":
 elif source == "examples":
     st.info("Showing a few example reviews: the Druglib test set couldn't be loaded here.")
 
-# ---------------------------------------------------------------- how close, overall
+# ---------------------------------------------------------------- side by side: how close | browse
 m = metrics(df).rename(columns={"Within 1 point": "within1"})
-with card():
+df = df.assign(gap=gap(df))
+drug_n = df.drug.value_counts()
+left, right = st.columns(2, gap="medium")
+
+with left, card(stretch=True):
     st.subheader("How close DiMEx gets")
     st.caption(f"Druglib test set · {len(df):,} reviews. Average gap = mean absolute error (MAE) on the "
                "patient's own scale; lower is better.")
-    cols = st.columns(len(m))
-    for col, r in zip(cols, m.itertuples()):
-        with col:
-            st.markdown(f"**{r.Aspect}** <span style='color:{MUTED}'>· scale {r.Scale}</span>",
-                        unsafe_allow_html=True)
-            st.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:30px'>{r.MAE:.2f}</span> "
-                        f"<span style='color:{MUTED}'>average gap</span>", unsafe_allow_html=True)
-            st.caption(f"{r.within1:.0%} within 1 point · agreement (kappa) {r.Kappa:.2f}")
+    for r in m.itertuples():                       # one row per aspect: name, gap, detail
+        a, b = st.columns([1, 1.25], vertical_alignment="center")
+        a.markdown(f"**{r.Aspect}**  \n<span style='color:{MUTED};font-size:13px'>scale {r.Scale}</span>",
+                   unsafe_allow_html=True)
+        b.markdown(f"<span style='font-family:IBM Plex Mono,monospace;font-size:26px'>{r.MAE:.2f}</span> "
+                   f"<span style='color:{MUTED}'>average gap</span><br>"
+                   f"<span style='color:{MUTED};font-size:13px'>{r.within1:.0%} within 1 point · "
+                   f"kappa {r.Kappa:.2f}</span>", unsafe_allow_html=True)
 
-# ---------------------------------------------------------------- browse
-df = df.assign(gap=gap(df))
-drug_n = df.drug.value_counts()
-with card():
+with right, card(stretch=True):
     st.subheader("Browse reviews")
-    f1, f2, f3 = st.columns([1.2, 1.2, 1])
+    f1, f2 = st.columns(2)
     drug = f1.selectbox("Drug", list(drug_n.index), index=None, placeholder=f"All {len(drug_n):,} drugs",
                         format_func=lambda d: f"{d} · {drug_n[d]}", key="dl_drug")
     sub = df if drug is None else df[df.drug == drug]
@@ -52,7 +53,7 @@ with card():
                              format_func=lambda c: f"{c} · {cond_n[c]}", key="dl_condition")
     if condition is not None:
         sub = sub[sub.condition == condition]
-    order = f3.selectbox("Order", ["Biggest disagreement", "Closest match", "Drug name"], key="dl_order")
+    order = st.selectbox("Order", ["Biggest disagreement", "Closest match", "Drug name"], key="dl_order")
     sub = (sub.sort_values("gap", ascending=False) if order == "Biggest disagreement"
            else sub.sort_values("gap") if order == "Closest match" else sub.sort_values(["drug", "review_id"]))
     st.markdown(f"<div style='font-size:13px;color:{MUTED}'>{len(sub):,} reviews · {COMPARE_KEY}</div>",

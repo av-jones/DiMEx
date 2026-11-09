@@ -23,10 +23,9 @@ WAVES = _waves()
 def _logo_mark():
     from urllib.parse import quote
     svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-           '<rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="none" stroke="#FFFFFF" stroke-width="2"/>'
-           '<path d="M16 7v18M7 16h18" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1.5" stroke-linecap="round"/>'
-           '<circle cx="22" cy="10" r="3.6" fill="#8FB4F0"/>'
-           '<circle cx="10.5" cy="21" r="2.2" fill="#FFFFFF" fill-opacity=".75"/></svg>')
+           '<path d="M16 2v28M2 16h28" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="2.2" stroke-linecap="round"/>'
+           '<circle cx="24" cy="8" r="6" fill="#8FB4F0"/>'
+           '<circle cx="8.5" cy="23.5" r="3.6" fill="#FFFFFF" fill-opacity=".85"/></svg>')
     return "data:image/svg+xml," + quote(svg)
 
 
@@ -142,7 +141,7 @@ st.markdown(
     @keyframes dimexGlow  {{ from {{ background-position: 0 center, 0% 0%, 100% 100%; }}
                              to   {{ background-position: 600px center, 100% 60%, 0% 40%; }} }}
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
-    .band-greeting {{ text-align: center; color: rgba(255, 255, 255, 0.82); font-size: 1rem; font-weight: 500;
+    .band-greeting {{ text-align: center; color: #FFD98A; font-size: 1.05rem; font-weight: 600;
                       letter-spacing: .01em; margin-bottom: 2px; }}
     /* Charts sit on white cards, so draw them on white (Streamlit paints them the page grey) */
     [data-testid="stVegaLiteChart"] svg.marks {{ background-color: #FFFFFF !important; }}

@@ -13,7 +13,7 @@ st.markdown(
     <style>
     /* Header: navy band with the DiMEx name on the left and the page links centered */
     [data-testid="stHeader"] {{
-        background: rgba(11, 46, 89, 0.82); height: 64px;        /* navy, slightly see-through */
+        background: rgba(8, 38, 96, 0.88); height: 64px;         /* deep blue, slightly see-through */
         backdrop-filter: blur(12px) saturate(140%); -webkit-backdrop-filter: blur(12px) saturate(140%);
     }}
     [data-testid="stHeader"]::before {{

@@ -5,7 +5,7 @@ import streamlit as st
 
 from core.druglib import ASPECTS, LEVEL_NAMES, gap, metrics
 from core.labels import chip
-from core.ui import card, load_druglib
+from core.ui import card, load_druglib, scroll_to
 from core.viz import COMPARE_KEY, MUTED, compare_bar
 
 PAGE = 8          # reviews shown per "Show more"
@@ -64,6 +64,12 @@ key = (drug, condition, order)
 if st.session_state.get("dl_key") != key:          # new filter: start from the top
     st.session_state.dl_key, st.session_state.dl_shown = key, PAGE
 shown = st.session_state.dl_shown
+
+# Once both a drug and a condition are picked, glide down to their reviews (once per new pair)
+st.markdown("<div class='dl-results' style='scroll-margin-top:84px'></div>", unsafe_allow_html=True)
+if drug and condition and st.session_state.get("dl_scrolled") != (drug, condition):
+    st.session_state.dl_scrolled = (drug, condition)
+    scroll_to("dl-results")
 
 
 def gap_label(g):

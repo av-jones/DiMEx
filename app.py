@@ -128,12 +128,11 @@ st.markdown(
         margin: -24px 0 8px calc(50% - 50vw);
         padding: 28px max(32px, calc(50vw - 640px)) 32px;
         position: relative; overflow: hidden; isolation: isolate;
-        /* A negative-to-positive spectrum (deep navy on the left to light blue on the right) with faint
-           waves drifting over it; a soft band of light sweeps across slowly (::before, behind the content) */
-        background-image: url("{WAVES}"),
-            linear-gradient(90deg, #17325F 0%, {BAND} 48%, #6C93CC 100%);
-        background-size: 1200px 220px, 100% 100%;
-        background-repeat: repeat-x, no-repeat;
+        /* Solid navy with faint waves drifting over it; a soft band of light sweeps across slowly
+           (::before, behind the content) */
+        background-image: url("{WAVES}");
+        background-size: 1200px 220px;
+        background-repeat: repeat-x;
         animation: dimexDrift 40s linear infinite;
     }}
     .st-key-picker_band::before {{
@@ -145,8 +144,7 @@ st.markdown(
         background-size: 70% 100%; background-position: -150% 0;
         animation: dimexSweep 24s ease-in-out infinite;
     }}
-    @keyframes dimexDrift {{ from {{ background-position: 0 center, 0 0; }}
-                             to   {{ background-position: 1200px center, 0 0; }} }}
+    @keyframes dimexDrift {{ from {{ background-position: 0 center; }} to {{ background-position: 1200px center; }} }}
     @keyframes dimexSweep {{ 0% {{ background-position: -150% 0; }} 75%, 100% {{ background-position: 250% 0; }} }}
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band::before {{ animation: none; opacity: 0; }} }}
     @media (prefers-reduced-motion: reduce) {{ .st-key-picker_band {{ animation: none; }} }}
